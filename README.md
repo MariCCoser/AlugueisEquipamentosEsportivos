@@ -52,6 +52,9 @@ Em disco normal, prefira corrigir a permissão:
 
 ## Estrutura de pastas
 
+Cada pasta tem um `README.md` explicando a parte do sistema que ela contém, exemplos de arquivos e
+quem do grupo é responsável. Comece por [`src/README.md`](src/README.md).
+
 ```
 src/
 ├── main/            # Main Process (Node): janela, IPC, banco, regras de negócio
