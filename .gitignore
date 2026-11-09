@@ -1,0 +1,26 @@
+# Dependências e builds
+node_modules/
+out/
+dist/
+release/
+coverage/
+
+# Variáveis de ambiente (segredos). Só o .env.example vai para o Git.
+.env
+.env.*
+!.env.example
+
+# Bancos/arquivos locais
+*.sqlite
+*.db
+*.log
+
+# Sistema/editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Cache do TypeScript
+*.tsbuildinfo
