@@ -9,7 +9,7 @@ A arquitetura e o modelo de dados estão em [`docs/Proposta_Arquitetura_e_Banco.
 
 - Node.js **18.18+** (testado com 18.19)
 - npm 9+
-- MySQL 8 (necessário a partir da etapa de banco de dados)
+- MySQL 8 **ou** MariaDB 10.4+ (o do XAMPP serve)
 
 ## Instalação
 
@@ -18,6 +18,8 @@ git clone https://github.com/MariCCoser/AlugueisEquipamentosEsportivos.git
 cd AlugueisEquipamentosEsportivos
 npm install
 cp .env.example .env   # depois preencha as credenciais do banco
+npm run db:setup       # cria banco, tabelas e dados de exemplo
+npm run dev
 ```
 
 O `.npmrc` do projeto usa `bin-links=false` para o `npm install` funcionar também em pendrives
@@ -26,15 +28,18 @@ O `.npmrc` do projeto usa `bin-links=false` para o `npm install` funcionar tamb�
 
 ## Scripts
 
-| Comando             | O que faz                                                   |
-| ------------------- | ----------------------------------------------------------- |
-| `npm run dev`       | Abre o app em modo desenvolvimento (hot reload do Renderer) |
-| `npm run build`     | Checa tipos e gera o build em `out/`                        |
-| `npm start`         | Abre o app a partir do build                                |
-| `npm run typecheck` | `tsc --noEmit` no Main/preload e no Renderer                |
-| `npm run lint`      | ESLint                                                      |
-| `npm run format`    | Prettier (`format:check` só verifica)                       |
-| `npm test`          | Testes com Vitest                                           |
+| Comando                             | O que faz                                                   |
+| ----------------------------------- | ----------------------------------------------------------- |
+| `npm run dev`                       | Abre o app em modo desenvolvimento (hot reload do Renderer) |
+| `npm run build`                     | Checa tipos e gera o build em `out/`                        |
+| `npm start`                         | Abre o app a partir do build                                |
+| `npm run typecheck`                 | `tsc --noEmit` no Main/preload e no Renderer                |
+| `npm run lint`                      | ESLint                                                      |
+| `npm run format`                    | Prettier (`format:check` só verifica)                       |
+| `npm test`                          | Testes com Vitest                                           |
+| `npm run db:setup`                  | Cria banco, usuário do app, tabelas e dados de exemplo      |
+| `npm run db:status`                 | Mostra quantos registros tem em cada tabela                 |
+| `npm run db:resetar -- --confirmar` | Apaga o banco e recria do zero                              |
 
 ### Linux: erro do `chrome-sandbox`
 
@@ -49,6 +54,34 @@ npm run start:no-sandbox
 
 Em disco normal, prefira corrigir a permissão:
 `sudo chown root node_modules/electron/dist/chrome-sandbox && sudo chmod 4755 node_modules/electron/dist/chrome-sandbox`.
+
+## Banco de dados
+
+10 tabelas relacionadas por 11 chaves estrangeiras: `usuarios`, `clientes`, `categorias`,
+`fornecedores`, `equipamentos`, `reservas`, `itens_reserva`, `manutencoes`, `multas`, `pagamentos`.
+Detalhes em [`src/main/database/`](src/main/database/).
+
+### Passo a passo (XAMPP)
+
+1. Ligue o MySQL do XAMPP: `sudo /opt/lampp/lampp startmysql`
+   (ou pelo painel `sudo /opt/lampp/manager-linux-x64.run` → aba _Manage Servers_ → _MySQL Database_ → _Start_).
+2. Copie o `.env.example` para `.env` e confira:
+   - `DB_ADMIN_USER` / `DB_ADMIN_PASSWORD`: o root do MySQL (no XAMPP, por padrão, sem senha).
+   - `DB_USER` / `DB_PASSWORD`: o usuário que o app vai usar. Escolha uma senha; o setup cria esse usuário.
+3. `npm run db:setup` — no final aparece a tabela com a quantidade de registros.
+4. `npm run dev` — a tela inicial mostra **✔ Banco conectado** e as contagens.
+
+Para ver os dados com interface gráfica: phpMyAdmin do XAMPP (`http://localhost/phpmyadmin`) ou MySQL Workbench.
+
+Login de exemplo (para quando a tela de login existir): `admin@aluguel.local` / `Admin@2026`.
+
+### Testes de integração
+
+Os testes que acessam o banco de verdade ficam desligados por padrão. Com o banco criado:
+
+```bash
+DB_TESTE=1 npm test
+```
 
 ## Estrutura de pastas
 

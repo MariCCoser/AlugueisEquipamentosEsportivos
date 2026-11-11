@@ -10,6 +10,11 @@
     "build": "npm run typecheck && node node_modules/electron-vite/bin/electron-vite.js build",
     "start": "node node_modules/electron-vite/bin/electron-vite.js preview",
     "start:no-sandbox": "node node_modules/electron-vite/bin/electron-vite.js preview --noSandbox",
+    "db:setup": "node node_modules/tsx/dist/cli.mjs src/main/database/cli.ts setup",
+    "db:migrar": "node node_modules/tsx/dist/cli.mjs src/main/database/cli.ts migrar",
+    "db:seed": "node node_modules/tsx/dist/cli.mjs src/main/database/cli.ts seed",
+    "db:status": "node node_modules/tsx/dist/cli.mjs src/main/database/cli.ts status",
+    "db:resetar": "node node_modules/tsx/dist/cli.mjs src/main/database/cli.ts resetar",
     "typecheck:node": "node node_modules/typescript/bin/tsc --noEmit -p tsconfig.node.json",
     "typecheck:web": "node node_modules/typescript/bin/tsc --noEmit -p tsconfig.web.json",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
@@ -31,9 +36,15 @@
     "eslint-config-prettier": "^10.1.8",
     "jiti": "^2.7.0",
     "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.72.2",
     "vite": "^5.4.21",
     "vitest": "^2.1.9"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^16.6.1",
+    "mysql2": "^3.24.6"
   }
 }
