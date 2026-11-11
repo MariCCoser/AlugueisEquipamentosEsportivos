@@ -8,7 +8,8 @@ import type { ApiExposta } from '@shared/api';
  */
 const api: ApiExposta = {
   app: {
-    info: () => ipcRenderer.invoke(IPC.app.info)
+    info: () => ipcRenderer.invoke(IPC.app.info),
+    statusBanco: () => ipcRenderer.invoke(IPC.app.statusBanco)
   }
 };
 

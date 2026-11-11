@@ -1,4 +1,5 @@
 import type { AppInfoDTO } from './dto/app.dto';
+import type { StatusBancoDTO } from './dto/banco.dto';
 import type { Resposta } from './dto/resposta';
 
 /**
@@ -8,5 +9,6 @@ import type { Resposta } from './dto/resposta';
 export interface ApiExposta {
   app: {
     info(): Promise<Resposta<AppInfoDTO>>;
+    statusBanco(): Promise<Resposta<StatusBancoDTO>>;
   };
 }

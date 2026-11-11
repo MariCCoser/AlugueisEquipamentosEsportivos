@@ -1,7 +1,9 @@
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { app, BrowserWindow, shell } from 'electron';
-import { RegistroIpc } from './ipc/registrarHandlers';
+import { Configuracao } from './config/Configuracao';
+import { Database } from './database/Database';
+import { RegistroIpc, type Dependencias } from './ipc/registrarHandlers';
 
 const DEV_SERVER_URL = process.env['ELECTRON_RENDERER_URL'];
 const ARQUIVO_INDEX = join(__dirname, '../renderer/index.html');
@@ -14,10 +16,11 @@ function origemConfiavel(url: string): boolean {
 
 class Aplicacao {
   private janela: BrowserWindow | null = null;
+  private db: Database | null = null;
 
   iniciar(): void {
     app.whenReady().then(() => {
-      new RegistroIpc(origemConfiavel).registrarTodos();
+      new RegistroIpc(origemConfiavel).registrarTodos(this.criarDependencias());
       this.criarJanela();
       app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) this.criarJanela();
@@ -26,6 +29,10 @@ class Aplicacao {
 
     app.on('window-all-closed', () => {
       if (process.platform !== 'darwin') app.quit();
+    });
+
+    app.on('will-quit', () => {
+      void this.db?.fechar();
     });
 
     // Nenhuma janela pode navegar para fora do app nem abrir pop-ups.
@@ -38,6 +45,20 @@ class Aplicacao {
         return { action: 'deny' };
       });
     });
+  }
+
+  /** Composição: cria os objetos compartilhados uma única vez. */
+  private criarDependencias(): Dependencias {
+    Configuracao.carregarArquivoEnv();
+    try {
+      const config = new Configuracao().banco();
+      this.db = new Database(config);
+      return { db: this.db, nomeBanco: config.database, erroBanco: null };
+    } catch (erro) {
+      const mensagem = erro instanceof Error ? erro.message : String(erro);
+      console.error('[config]', mensagem);
+      return { db: null, nomeBanco: '', erroBanco: mensagem };
+    }
   }
 
   private criarJanela(): void {

@@ -28,3 +28,29 @@ body {
 .status {
   color: var(--cor-secundaria);
 }
+
+.banco table {
+  border-collapse: collapse;
+  min-width: 280px;
+  background: #fff;
+}
+
+.banco th,
+.banco td {
+  padding: 6px 12px;
+  border: 1px solid #d9e2ec;
+  text-align: left;
+}
+
+.banco td:last-child {
+  text-align: right;
+}
+
+.banco-ok {
+  color: #2f7a3e;
+  font-size: 1.1rem;
+}
+
+.banco-erro {
+  color: #b42318;
+}

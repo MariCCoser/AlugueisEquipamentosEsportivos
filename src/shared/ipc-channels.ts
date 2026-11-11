@@ -8,7 +8,8 @@
  */
 export const IPC = {
   app: {
-    info: 'app:info'
+    info: 'app:info',
+    statusBanco: 'app:statusBanco'
   }
 } as const;
 
