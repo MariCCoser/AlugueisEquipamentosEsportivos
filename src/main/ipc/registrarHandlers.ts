@@ -2,7 +2,6 @@ import { ipcMain, type IpcMainInvokeEvent } from 'electron';
 import { TODOS_OS_CANAIS, type CanalIpc } from '@shared/ipc-channels';
 import { falha, type Resposta } from '@shared/dto/resposta';
 import type { Perfil } from '@shared/models/enums';
-import { DominioError, ValidacaoError } from '../errors/DominioError';
 import { ErroApp } from '../errors/ErroApp';
 import { PERMISSOES } from './permissoes';
 
@@ -39,7 +38,7 @@ export interface Guarda {
  * 1. origem: só a nossa tela pode chamar;
  * 2. permissão: PUBLICO / LOGADO / ADMIN (ver permissoes.ts);
  * 3. handler do domínio — ou "ainda não implementado", se ninguém registrou;
- * 4. try/catch: erro esperado (DominioError/ErroApp) vira `falha` com o código e a mensagem dele;
+ * 4. try/catch: erro esperado (ErroApp) vira `falha` com o código, a mensagem e os campos dele;
  *    qualquer outro erro vira mensagem genérica, sem mostrar detalhes técnicos.
  */
 export class RegistroIpc {
@@ -95,15 +94,8 @@ export class RegistroIpc {
     try {
       return await handler(entrada, evento);
     } catch (erro) {
-      // Erro de regra/validação: a mensagem já é amigável e pode ir para a tela.
-      if (erro instanceof DominioError) {
-        return falha(
-          erro.codigo,
-          erro.message,
-          erro instanceof ValidacaoError ? erro.campos : undefined
-        );
-      }
-      if (erro instanceof ErroApp) return falha(erro.codigo, erro.message);
+      // Erro esperado (validação, não encontrado, regra...): a mensagem já é amigável.
+      if (erro instanceof ErroApp) return falha(erro.codigo, erro.message, erro.campos);
       // O detalhe vai só para o terminal; a tela recebe uma mensagem genérica.
       console.error(`[IPC ${canal}]`, erro);
       return falha('INTERNO', 'Erro inesperado. Tente novamente.');

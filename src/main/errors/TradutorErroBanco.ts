@@ -1,4 +1,4 @@
-import { RegraNegocioError, ValidacaoError, type DominioError } from './DominioError';
+import { RegraNegocioError, ValidacaoError, type ErroApp } from './ErroApp';
 
 /** Textos que o service passa para personalizar a mensagem de cada situação. */
 export interface MensagensErroBanco {
@@ -45,7 +45,7 @@ export class TradutorErroBanco {
     try {
       return await operacao();
     } catch (erro) {
-      throw TradutorErroBanco.traduzir(erro, mensagens) as DominioError | Error;
+      throw TradutorErroBanco.traduzir(erro, mensagens) as ErroApp | Error;
     }
   }
 

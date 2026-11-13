@@ -1,5 +1,5 @@
 import type { DataISO } from '@shared/dto/resposta';
-import { ValidacaoError } from '../errors/DominioError';
+import { ValidacaoError } from '../errors/ErroApp';
 import { CalendarioISO } from './CalendarioISO';
 
 /**

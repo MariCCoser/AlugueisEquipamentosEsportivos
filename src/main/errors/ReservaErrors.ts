@@ -1,5 +1,5 @@
 import type { StatusReserva } from '@shared/models/enums';
-import { RegraNegocioError } from './DominioError';
+import { RegraNegocioError } from './ErroApp';
 
 /** Motivos pelos quais um equipamento não pode entrar numa reserva. */
 export type MotivoIndisponivel =

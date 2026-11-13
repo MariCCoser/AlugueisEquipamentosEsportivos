@@ -1,7 +1,7 @@
 import type { IpcMainInvokeEvent } from 'electron';
 import { describe, expect, it, vi } from 'vitest';
 import type { Perfil } from '../../../src/shared/models/enums';
-import { RegraNegocioError } from '../../../src/main/errors/DominioError';
+import { RegraNegocioError } from '../../../src/main/errors/ErroApp';
 import type { ClienteService } from '../../../src/main/services/ClienteService';
 import type { DisponibilidadeService } from '../../../src/main/services/DisponibilidadeService';
 import type { EquipamentoService } from '../../../src/main/services/EquipamentoService';

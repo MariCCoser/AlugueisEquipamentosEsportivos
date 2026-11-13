@@ -15,7 +15,7 @@ import type { RegistroIpc } from './registrarHandlers';
 /**
  * Canais `clientes:*`. Cada handler só faz três coisas:
  * valida a entrada (zod) → chama o service → embrulha em `sucesso`.
- * Erros de regra (DominioError) viram `falha` no RegistroIpc.
+ * Erros esperados (ErroApp) viram `falha` no RegistroIpc.
  *
  * `clientes:historico` entra na etapa 4 (depende de pagamentos e multas).
  */

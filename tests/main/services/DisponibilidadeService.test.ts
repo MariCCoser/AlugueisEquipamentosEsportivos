@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Equipamento, Manutencao } from '@shared/models/entidades';
 import { Periodo } from '../../../src/main/domain/Periodo';
-import { NaoEncontradoError, ValidacaoError } from '../../../src/main/errors/DominioError';
+import { NaoEncontradoError, ValidacaoError } from '../../../src/main/errors/ErroApp';
 import {
   DisponibilidadeService,
   type RepoReservasDisp

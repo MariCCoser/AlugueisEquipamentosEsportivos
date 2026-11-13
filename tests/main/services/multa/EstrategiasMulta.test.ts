@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Dinheiro } from '../../../../src/main/domain/Dinheiro';
-import { ValidacaoError } from '../../../../src/main/errors/DominioError';
+import { ValidacaoError } from '../../../../src/main/errors/ErroApp';
 import { FabricaEstrategiaMulta } from '../../../../src/main/services/multa/FabricaEstrategiaMulta';
 import { MultaDiariaFixa } from '../../../../src/main/services/multa/MultaDiariaFixa';
 import { MultaPercentual } from '../../../../src/main/services/multa/MultaPercentual';

@@ -2,7 +2,7 @@ import type { DisponibilidadeDTO, VerificarDisponibilidadeDTO } from '@shared/dt
 import type { Equipamento } from '@shared/models/entidades';
 import { EquipamentoDominio } from '../domain/EquipamentoDominio';
 import { Periodo } from '../domain/Periodo';
-import { NaoEncontradoError } from '../errors/DominioError';
+import { NaoEncontradoError } from '../errors/ErroApp';
 import type { MotivoIndisponivel } from '../errors/ReservaErrors';
 import type { EquipamentoRepository } from '../repositories/EquipamentoRepository';
 import type { ManutencaoRepository } from '../repositories/ManutencaoRepository';

@@ -1,6 +1,6 @@
 import type { DataISO } from '@shared/dto/resposta';
 import type { CaucaoStatus, StatusReserva } from '@shared/models/enums';
-import { RegraNegocioError, ValidacaoError } from '../errors/DominioError';
+import { RegraNegocioError, ValidacaoError } from '../errors/ErroApp';
 import { CalendarioISO } from './CalendarioISO';
 import { CicloReserva } from './CicloReserva';
 import { Dinheiro } from './Dinheiro';

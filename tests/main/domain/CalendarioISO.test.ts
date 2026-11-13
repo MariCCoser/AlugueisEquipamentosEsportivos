@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { CalendarioISO } from '../../../src/main/domain/CalendarioISO';
-import { ValidacaoError } from '../../../src/main/errors/DominioError';
+import { ValidacaoError } from '../../../src/main/errors/ErroApp';
 
 describe('CalendarioISO', () => {
   it('conta dias entre datas, inclusive virando mês e ano', () => {

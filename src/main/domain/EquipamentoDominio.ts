@@ -1,6 +1,6 @@
 import type { Equipamento } from '@shared/models/entidades';
 import type { EstadoConservacao, Modalidade, StatusEquipamento } from '@shared/models/enums';
-import { ValidacaoError } from '../errors/DominioError';
+import { ValidacaoError } from '../errors/ErroApp';
 import { EquipamentoIndisponivelError, type MotivoIndisponivel } from '../errors/ReservaErrors';
 import { Dinheiro } from './Dinheiro';
 

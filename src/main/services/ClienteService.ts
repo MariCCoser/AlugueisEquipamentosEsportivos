@@ -7,7 +7,7 @@ import type {
 import type { Paginado } from '@shared/dto/resposta';
 import type { ClienteRepository } from '../repositories/ClienteRepository';
 import type { ReservaRepository } from '../repositories/ReservaRepository';
-import { NaoEncontradoError, RegraNegocioError } from '../errors/DominioError';
+import { NaoEncontradoError, RegraNegocioError } from '../errors/ErroApp';
 import { TradutorErroBanco } from '../errors/TradutorErroBanco';
 import { ClienteMapper } from './mapeadores/ClienteMapper';
 import { Paginador } from './Paginador';

@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import { ValidacaoError } from '../../errors/DominioError';
+import { ValidacaoError } from '../../errors/ErroApp';
 
 /**
  * Aplica um schema zod ao que chegou pelo IPC.

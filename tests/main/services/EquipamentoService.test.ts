@@ -5,7 +5,7 @@ import {
   NaoEncontradoError,
   RegraNegocioError,
   ValidacaoError
-} from '../../../src/main/errors/DominioError';
+} from '../../../src/main/errors/ErroApp';
 import { EquipamentoService } from '../../../src/main/services/EquipamentoService';
 import { erroMysql, umaCategoria, umEquipamento, umFornecedor } from './dadosTeste';
 

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CriarClienteDTO } from '@shared/dto/cliente.dto';
 import type { Cliente, Reserva } from '@shared/models/entidades';
-import { NaoEncontradoError, RegraNegocioError } from '../../../src/main/errors/DominioError';
+import { NaoEncontradoError, RegraNegocioError } from '../../../src/main/errors/ErroApp';
 import {
   ClienteService,
   type RepoClientes,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RegraNegocioError, ValidacaoError } from '../../../src/main/errors/DominioError';
+import { RegraNegocioError, ValidacaoError } from '../../../src/main/errors/ErroApp';
 import { TradutorErroBanco } from '../../../src/main/errors/TradutorErroBanco';
 import { ClienteMapper } from '../../../src/main/services/mapeadores/ClienteMapper';
 import { Paginador } from '../../../src/main/services/Paginador';
