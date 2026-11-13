@@ -3,6 +3,13 @@ import type { NovoPagamento, Pagamento } from '@shared/models/entidades';
 import type { ParametroSql } from '../database/Database';
 import { BaseRepository, type CamposGravaveis } from './BaseRepository';
 
+export interface FiltroPagamentos {
+  tipo?: TipoPagamento;
+  /** Datas 'AAAA-MM-DD', inclusive. */
+  dataInicio?: string;
+  dataFim?: string;
+}
+
 /** Tabela `pagamentos` (aluguel, caução ou multa de uma reserva). */
 export class PagamentoRepository extends BaseRepository<Pagamento, NovoPagamento> {
   protected readonly tabela = 'pagamentos';
@@ -14,6 +21,29 @@ export class PagamentoRepository extends BaseRepository<Pagamento, NovoPagamento
     valor: true,
     data: true
   };
+
+  /** Filtros da tela de pagamentos (tipo e período). Mais recentes primeiro. */
+  filtrar(filtro: FiltroPagamentos = {}): Promise<Pagamento[]> {
+    const condicoes: string[] = [];
+    const params: ParametroSql[] = [];
+    if (filtro.tipo) {
+      condicoes.push('tipo = ?');
+      params.push(filtro.tipo);
+    }
+    if (filtro.dataInicio) {
+      condicoes.push('DATE(data) >= ?');
+      params.push(filtro.dataInicio);
+    }
+    if (filtro.dataFim) {
+      condicoes.push('DATE(data) <= ?');
+      params.push(filtro.dataFim);
+    }
+    return this.selecionar(condicoes.join(' AND '), params, 'ORDER BY data DESC, id DESC');
+  }
+
+  listarPorMulta(multaId: number): Promise<Pagamento[]> {
+    return this.selecionar('multa_id = ?', [multaId], 'ORDER BY data, id');
+  }
 
   listarPorReserva(reservaId: number): Promise<Pagamento[]> {
     return this.selecionar('reserva_id = ?', [reservaId], 'ORDER BY data, id');

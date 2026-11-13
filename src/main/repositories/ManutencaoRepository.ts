@@ -1,7 +1,15 @@
 import type { DataISO } from '@shared/dto/resposta';
-import type { EstadoConservacao } from '@shared/models/enums';
+import type { EstadoConservacao, TipoManutencao } from '@shared/models/enums';
 import type { Manutencao, NovaManutencao } from '@shared/models/entidades';
+import type { ParametroSql } from '../database/Database';
 import { BaseRepository, type CamposGravaveis } from './BaseRepository';
+
+export interface FiltroManutencoes {
+  /** true = só as que ainda não voltaram; false = só as que voltaram. */
+  abertas?: boolean;
+  tipo?: TipoManutencao;
+  fornecedorId?: number;
+}
 
 export interface RetornoManutencao {
   dataRetorno: DataISO;
@@ -22,6 +30,24 @@ export class ManutencaoRepository extends BaseRepository<Manutencao, NovaManuten
     custo: true,
     estadoRetorno: true
   };
+
+  /** Filtros combináveis da tela de manutenções. Mais recentes primeiro. */
+  filtrar(filtro: FiltroManutencoes = {}): Promise<Manutencao[]> {
+    const condicoes: string[] = [];
+    const params: ParametroSql[] = [];
+    if (filtro.abertas !== undefined) {
+      condicoes.push(filtro.abertas ? 'data_retorno IS NULL' : 'data_retorno IS NOT NULL');
+    }
+    if (filtro.tipo) {
+      condicoes.push('tipo = ?');
+      params.push(filtro.tipo);
+    }
+    if (filtro.fornecedorId !== undefined) {
+      condicoes.push('fornecedor_id = ?');
+      params.push(filtro.fornecedorId);
+    }
+    return this.selecionar(condicoes.join(' AND '), params, 'ORDER BY data_envio DESC, id DESC');
+  }
 
   listarEmAberto(): Promise<Manutencao[]> {
     return this.selecionar('data_retorno IS NULL', [], 'ORDER BY data_envio, id');
