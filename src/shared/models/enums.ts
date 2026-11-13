@@ -36,3 +36,7 @@ export type TipoPagamento = (typeof TIPOS_PAGAMENTO)[number];
 
 export const FORMAS_PAGAMENTO = ['DINHEIRO', 'PIX', 'CARTAO'] as const;
 export type FormaPagamento = (typeof FORMAS_PAGAMENTO)[number];
+
+/** Formas de calcular multa por atraso (padrão Strategy, ver services/multa/). */
+export const ESTRATEGIAS_MULTA = ['PERCENTUAL', 'DIARIA_FIXA'] as const;
+export type EstrategiaMultaTipo = (typeof ESTRATEGIAS_MULTA)[number];
