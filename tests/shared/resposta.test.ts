@@ -24,6 +24,6 @@ describe('Resposta', () => {
 describe('IPC', () => {
   it('todos os canais seguem o padrão dominio:acao', () => {
     const canais = Object.values(IPC).flatMap((dominio) => Object.values(dominio));
-    for (const canal of canais) expect(canal).toMatch(/^[a-z]+:[a-zA-Z]+$/);
+    for (const canal of canais) expect(canal).toMatch(/^[a-z][a-zA-Z]*:[a-z][a-zA-Z]*$/);
   });
 });
