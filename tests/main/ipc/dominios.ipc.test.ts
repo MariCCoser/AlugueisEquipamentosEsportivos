@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Perfil } from '../../../src/shared/models/enums';
 import { RegraNegocioError } from '../../../src/main/errors/ErroApp';
 import type { ClienteService } from '../../../src/main/services/ClienteService';
+import type { HistoricoClienteService } from '../../../src/main/services/HistoricoClienteService';
 import type { DisponibilidadeService } from '../../../src/main/services/DisponibilidadeService';
 import type { EquipamentoService } from '../../../src/main/services/EquipamentoService';
 
@@ -50,7 +51,11 @@ function montar(perfil: Perfil | null = 'FUNCIONARIO') {
     listarDisponiveis: vi.fn(async () => [])
   };
   const disponibilidade = { verificar: vi.fn(async () => ({ disponivel: true })) };
-  registrarClientesIpc(registro, clientes as unknown as ClienteService);
+  registrarClientesIpc(
+    registro,
+    clientes as unknown as ClienteService,
+    { historico: vi.fn() } as unknown as HistoricoClienteService
+  );
   registrarEquipamentosIpc(
     registro,
     equipamentos as unknown as EquipamentoService,
@@ -60,9 +65,9 @@ function montar(perfil: Perfil | null = 'FUNCIONARIO') {
 }
 
 describe('canais de clientes e equipamentos', () => {
-  it('registram todos os canais da etapa 2 (histórico fica para depois)', () => {
+  it('registram todos os canais de clientes e equipamentos', () => {
     const pendentes = montar().registro.canaisPendentes();
-    expect(pendentes.filter((c) => c.startsWith('clientes:'))).toEqual(['clientes:historico']);
+    expect(pendentes.filter((c) => c.startsWith('clientes:'))).toEqual([]);
     expect(pendentes.filter((c) => c.startsWith('equipamentos:'))).toEqual([]);
   });
 

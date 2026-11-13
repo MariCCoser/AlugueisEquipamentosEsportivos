@@ -1,8 +1,9 @@
 import { IPC } from '@shared/ipc-channels';
 import { sucesso } from '@shared/dto/resposta';
-import type { ClienteDTO } from '@shared/dto/cliente.dto';
+import type { ClienteDTO, HistoricoClienteDTO } from '@shared/dto/cliente.dto';
 import type { Paginado } from '@shared/dto/resposta';
 import type { ClienteService } from '../services/ClienteService';
+import type { HistoricoClienteService } from '../services/HistoricoClienteService';
 import { idSchema } from '../security/validators/campos.schema';
 import {
   atualizarClienteSchema,
@@ -16,10 +17,12 @@ import type { RegistroIpc } from './registrarHandlers';
  * Canais `clientes:*`. Cada handler só faz três coisas:
  * valida a entrada (zod) → chama o service → embrulha em `sucesso`.
  * Erros esperados (ErroApp) viram `falha` no RegistroIpc.
- *
- * `clientes:historico` entra na etapa 4 (depende de pagamentos e multas).
  */
-export function registrarClientesIpc(registro: RegistroIpc, clientes: ClienteService): void {
+export function registrarClientesIpc(
+  registro: RegistroIpc,
+  clientes: ClienteService,
+  historico: HistoricoClienteService
+): void {
   registro.registrar<ClienteDTO>(IPC.clientes.criar, async (entrada) =>
     sucesso(await clientes.criar(Validador.validar(criarClienteSchema, entrada)))
   );
@@ -40,4 +43,8 @@ export function registrarClientesIpc(registro: RegistroIpc, clientes: ClienteSer
     await clientes.excluir(Validador.validar(idSchema, entrada).id);
     return sucesso(undefined);
   });
+
+  registro.registrar<HistoricoClienteDTO>(IPC.clientes.historico, async (entrada) =>
+    sucesso(await historico.historico(Validador.validar(idSchema, entrada).id))
+  );
 }

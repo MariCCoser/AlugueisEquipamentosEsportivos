@@ -8,7 +8,8 @@ import type {
   CriarReservaDTO,
   FiltroReservaDTO
 } from '@shared/dto/reserva.dto';
-import { STATUS_RESERVA } from '@shared/models/enums';
+import type { RegistrarDevolucaoDTO } from '@shared/dto/devolucao.dto';
+import { ESTADOS_CONSERVACAO, STATUS_RESERVA } from '@shared/models/enums';
 import { Campos } from './campos.schema';
 
 /**
@@ -75,4 +76,20 @@ export const criarItemReservaSchema: z.ZodType<CriarItemReservaDTO> = z.object({
 export const atualizarItemReservaSchema: z.ZodType<AtualizarItemReservaDTO> = z.object({
   id: Campos.id('Item'),
   equipamentoId: Campos.id('Equipamento')
+});
+
+export const registrarDevolucaoSchema: z.ZodType<RegistrarDevolucaoDTO> = z.object({
+  reservaId: Campos.id('Reserva'),
+  dataDevolucaoReal: Campos.data('Data de devolução'),
+  itens: z
+    .array(
+      z.object({
+        itemReservaId: Campos.id('Item'),
+        estadoDevolucao: z.enum(ESTADOS_CONSERVACAO, { error: 'Estado de conservação inválido.' })
+      }),
+      { error: 'Informe o estado de cada equipamento.' }
+    )
+    .min(1, { error: 'Informe o estado de cada equipamento.' })
+    .max(50),
+  reterCaucao: z.boolean().optional()
 });
