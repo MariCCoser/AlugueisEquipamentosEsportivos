@@ -2,9 +2,11 @@ import { join } from 'node:path';
 import { app, BrowserWindow } from 'electron';
 import { Configuracao } from './config/Configuracao';
 import { Database } from './database/Database';
-import { RegistroIpc, type Dependencias } from './ipc/registrarHandlers';
+import { registrarAppIpc, type DependenciasApp } from './ipc/app.ipc';
+import { RegistroIpc } from './ipc/registrarHandlers';
 import { EndurecimentoElectron } from './security/EndurecimentoElectron';
 import { PoliticaOrigem } from './security/PoliticaOrigem';
+import { Sessao } from './security/Sessao';
 
 const DEV_SERVER_URL = app.isPackaged ? undefined : process.env['ELECTRON_RENDERER_URL'];
 const ARQUIVO_INDEX = join(__dirname, '../renderer/index.html');
@@ -18,6 +20,7 @@ class Aplicacao {
   private db: Database | null = null;
   private readonly politica = new PoliticaOrigem(DEV_SERVER_URL, ARQUIVO_INDEX, DOMINIOS_EXTERNOS);
   private readonly seguranca = new EndurecimentoElectron(this.politica);
+  private readonly sessao = new Sessao();
 
   iniciar(): void {
     if (!this.seguranca.aplicarGlobal()) return;
@@ -30,9 +33,7 @@ class Aplicacao {
 
     app.whenReady().then(() => {
       this.seguranca.aplicarSessao();
-      new RegistroIpc((url) => this.politica.origemConfiavel(url)).registrarTodos(
-        this.criarDependencias()
-      );
+      this.registrarCanais();
       this.criarJanela();
       app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) this.criarJanela();
@@ -48,8 +49,24 @@ class Aplicacao {
     });
   }
 
+  /**
+   * Liga os canais IPC. Cada domínio registra os seus handlers aqui; os canais
+   * que ainda não têm handler respondem "ainda não implementado".
+   */
+  private registrarCanais(): void {
+    const registro = new RegistroIpc({
+      origemConfiavel: (url) => this.politica.origemConfiavel(url),
+      perfilAtual: () => this.sessao.perfilAtual()
+    });
+
+    registrarAppIpc(registro, this.criarDependencias());
+    // Próximos domínios: registrarAuthIpc(registro, ...), registrarClientesIpc(registro, ...)
+
+    registro.ativar();
+  }
+
   /** Composição: cria os objetos compartilhados uma única vez. */
-  private criarDependencias(): Dependencias {
+  private criarDependencias(): DependenciasApp {
     Configuracao.carregarArquivoEnv();
     try {
       const config = new Configuracao().banco();
