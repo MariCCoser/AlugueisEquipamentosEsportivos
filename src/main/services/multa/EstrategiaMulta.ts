@@ -1,6 +1,6 @@
 import type { EstrategiaMultaTipo } from '@shared/models/enums';
 import { Dinheiro } from '../../domain/Dinheiro';
-import { ValidacaoError } from '../../errors/DominioError';
+import { ValidacaoError } from '../../errors/ErroApp';
 
 /** O que toda estratégia precisa saber para calcular a multa de uma reserva. */
 export interface ContextoMulta {

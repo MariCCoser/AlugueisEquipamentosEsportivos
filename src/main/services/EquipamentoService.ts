@@ -10,7 +10,7 @@ import type { Paginado } from '@shared/dto/resposta';
 import type { Categoria, Equipamento, Fornecedor } from '@shared/models/entidades';
 import { EquipamentoDominio } from '../domain/EquipamentoDominio';
 import { Periodo } from '../domain/Periodo';
-import { NaoEncontradoError, RegraNegocioError, ValidacaoError } from '../errors/DominioError';
+import { NaoEncontradoError, RegraNegocioError, ValidacaoError } from '../errors/ErroApp';
 import { TradutorErroBanco } from '../errors/TradutorErroBanco';
 import type { CategoriaRepository } from '../repositories/CategoriaRepository';
 import type { EquipamentoRepository } from '../repositories/EquipamentoRepository';

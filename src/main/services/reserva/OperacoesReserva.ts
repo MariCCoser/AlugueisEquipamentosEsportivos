@@ -5,7 +5,7 @@ import { Dinheiro } from '../../domain/Dinheiro';
 import { EquipamentoDominio } from '../../domain/EquipamentoDominio';
 import { Periodo } from '../../domain/Periodo';
 import { ReservaDominio, type ItemDaReserva } from '../../domain/ReservaDominio';
-import { NaoEncontradoError, RegraNegocioError, ValidacaoError } from '../../errors/DominioError';
+import { NaoEncontradoError, RegraNegocioError, ValidacaoError } from '../../errors/ErroApp';
 import { EquipamentoIndisponivelError } from '../../errors/ReservaErrors';
 import type { Repositorios } from '../../repositories';
 import { DisponibilidadeService } from '../DisponibilidadeService';

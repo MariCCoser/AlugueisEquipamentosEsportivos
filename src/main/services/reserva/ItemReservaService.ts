@@ -6,7 +6,7 @@ import type {
 } from '@shared/dto/reserva.dto';
 import type { ItemReserva } from '@shared/models/entidades';
 import { EquipamentoDominio } from '../../domain/EquipamentoDominio';
-import { NaoEncontradoError, RegraNegocioError } from '../../errors/DominioError';
+import { NaoEncontradoError, RegraNegocioError } from '../../errors/ErroApp';
 import { ReservaMontador } from '../mapeadores/ReservaMontador';
 import type { AcessoDados } from '../UnidadeDeTrabalho';
 import { OperacoesReserva } from './OperacoesReserva';

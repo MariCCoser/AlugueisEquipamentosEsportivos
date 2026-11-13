@@ -13,7 +13,7 @@ import { Dinheiro } from '../../domain/Dinheiro';
 import { EquipamentoDominio } from '../../domain/EquipamentoDominio';
 import { Periodo } from '../../domain/Periodo';
 import { ReservaDominio } from '../../domain/ReservaDominio';
-import { NaoEncontradoError, RegraNegocioError } from '../../errors/DominioError';
+import { NaoEncontradoError, RegraNegocioError } from '../../errors/ErroApp';
 import { EquipamentoIndisponivelError } from '../../errors/ReservaErrors';
 import { TradutorErroBanco } from '../../errors/TradutorErroBanco';
 import { ReservaMontador } from '../mapeadores/ReservaMontador';

@@ -2,7 +2,7 @@
 
 **Projeto:** Sistema de Gestão & Aluguel de Equipamentos Esportivos
 **Disciplina:** DAD — Desenvolvimento de Aplicações Desktop (Electron + TypeScript)
-**Status:** proposta para discussão na reunião do grupo (nada aqui está implementado ainda)
+**Status:** proposta para discussão na reunião do grupo. O que já foi implementado está descrito em [`Arquitetura_e_Dicionario_de_Dados.md`](Arquitetura_e_Dicionario_de_Dados.md).
 
 ---
 

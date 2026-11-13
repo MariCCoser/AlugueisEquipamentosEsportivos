@@ -37,7 +37,9 @@ describe('PoliticaOrigem — produção', () => {
   });
 
   it('recusa outros arquivos locais e sites', () => {
-    expect(politica.origemConfiavel(pathToFileURL(join(process.cwd(), 'outro.html')).href)).toBe(false);
+    expect(politica.origemConfiavel(pathToFileURL(join(process.cwd(), 'outro.html')).href)).toBe(
+      false
+    );
     expect(politica.origemConfiavel('https://exemplo.com/')).toBe(false);
     expect(politica.origemConfiavel('http://localhost:5173/')).toBe(false);
   });

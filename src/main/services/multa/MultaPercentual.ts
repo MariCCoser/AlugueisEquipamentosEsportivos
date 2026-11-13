@@ -1,5 +1,5 @@
 import type { Dinheiro } from '../../domain/Dinheiro';
-import { ValidacaoError } from '../../errors/DominioError';
+import { ValidacaoError } from '../../errors/ErroApp';
 import { EstrategiaMultaBase, type ContextoMulta } from './EstrategiaMulta';
 
 /**

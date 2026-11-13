@@ -2,11 +2,14 @@ import { join } from 'node:path';
 import { app, BrowserWindow } from 'electron';
 import { Configuracao } from './config/Configuracao';
 import { Database } from './database/Database';
+import { NotificacaoClient } from './integrations/NotificacaoClient';
 import { registrarAppIpc, type DependenciasApp } from './ipc/app.ipc';
 import { registrarClientesIpc } from './ipc/clientes.ipc';
 import { registrarEquipamentosIpc } from './ipc/equipamentos.ipc';
+import { registrarNotificacoesIpc } from './ipc/notificacoes.ipc';
 import { RegistroIpc } from './ipc/registrarHandlers';
 import { registrarReservasIpc } from './ipc/reservas.ipc';
+import { criarRepositorios } from './repositories';
 import { CalendarioISO } from './domain/CalendarioISO';
 import { ClienteService } from './services/ClienteService';
 import { DisponibilidadeService } from './services/DisponibilidadeService';
@@ -15,6 +18,7 @@ import { FabricaEstrategiaMulta } from './services/multa/FabricaEstrategiaMulta'
 import { ItemReservaService } from './services/reserva/ItemReservaService';
 import { ReservaService } from './services/reserva/ReservaService';
 import { UnidadeDeTrabalho } from './services/UnidadeDeTrabalho';
+import { NotificacaoService } from './services/NotificacaoService';
 import { EndurecimentoElectron } from './security/EndurecimentoElectron';
 import { PoliticaOrigem } from './security/PoliticaOrigem';
 import { Sessao } from './security/Sessao';
@@ -74,6 +78,7 @@ class Aplicacao {
     registrarAppIpc(registro, dependencias);
     // Sem banco configurado, os canais de domínio respondem "ainda não implementado"
     if (dependencias.db) this.registrarDominios(registro, dependencias.db);
+    this.registrarNotificacoes(registro, dependencias.db);
 
     registro.ativar();
   }
@@ -108,6 +113,17 @@ class Aplicacao {
       new ItemReservaService(dados),
       this.sessao
     );
+  }
+
+  /** Canais de notificação: precisam do banco (para achar o cliente) e da chave da API no .env. */
+  private registrarNotificacoes(registro: RegistroIpc, db: Database | null): void {
+    if (!db) return; // sem banco, os canais respondem "ainda não implementado"
+    try {
+      const cliente = new NotificacaoClient(new Configuracao().notificacoes());
+      registrarNotificacoesIpc(registro, new NotificacaoService(criarRepositorios(db), cliente));
+    } catch (erro) {
+      console.error('[notificacoes]', erro instanceof Error ? erro.message : erro);
+    }
   }
 
   /** Composição: cria os objetos compartilhados uma única vez. */

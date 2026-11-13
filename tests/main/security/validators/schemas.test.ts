@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ValidacaoError } from '../../../../src/main/errors/DominioError';
+import { ValidacaoError } from '../../../../src/main/errors/ErroApp';
 import { idSchema } from '../../../../src/main/security/validators/campos.schema';
 import {
   atualizarClienteSchema,

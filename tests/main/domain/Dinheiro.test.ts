@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Dinheiro } from '../../../src/main/domain/Dinheiro';
-import { ValidacaoError } from '../../../src/main/errors/DominioError';
+import { ValidacaoError } from '../../../src/main/errors/ErroApp';
 
 describe('Dinheiro', () => {
   it('converte reais em centavos sem erro de ponto flutuante', () => {

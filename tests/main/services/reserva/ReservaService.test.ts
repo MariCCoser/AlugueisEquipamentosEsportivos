@@ -4,7 +4,7 @@ import {
   NaoEncontradoError,
   RegraNegocioError,
   ValidacaoError
-} from '../../../../src/main/errors/DominioError';
+} from '../../../../src/main/errors/ErroApp';
 import {
   EquipamentoIndisponivelError,
   TransicaoInvalidaError

@@ -3,7 +3,7 @@
 Sistema desktop de gestão e aluguel de equipamentos esportivos — projeto final de DAD
 (Desenvolvimento de Aplicações Desktop). Feito em **Electron + TypeScript**, com banco **MySQL 8**.
 
-A arquitetura e o modelo de dados estão em [`docs/Proposta_Arquitetura_e_Banco.md`](docs/Proposta_Arquitetura_e_Banco.md).
+A arquitetura como está implementada e o dicionário de dados estão em [`docs/Arquitetura_e_Dicionario_de_Dados.md`](docs/Arquitetura_e_Dicionario_de_Dados.md); a proposta original (com os motivos de cada escolha), em [`docs/Proposta_Arquitetura_e_Banco.md`](docs/Proposta_Arquitetura_e_Banco.md); as decisões de segurança, em [`docs/SEGURANCA.md`](docs/SEGURANCA.md).
 
 ## Requisitos
 
@@ -40,6 +40,7 @@ O `.npmrc` do projeto usa `bin-links=false` para o `npm install` funcionar tamb�
 | `npm run db:setup`                  | Cria banco, usuário do app, tabelas e dados de exemplo      |
 | `npm run db:status`                 | Mostra quantos registros tem em cada tabela                 |
 | `npm run db:resetar -- --confirmar` | Apaga o banco e recria do zero                              |
+| `npm run api:notificacoes`          | Liga a nossa API de notificações (ver `api-notificacoes/`)  |
 
 ### Linux: erro do `chrome-sandbox`
 

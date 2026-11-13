@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { NaoEncontradoError, RegraNegocioError } from '../../../../src/main/errors/DominioError';
+import { NaoEncontradoError, RegraNegocioError } from '../../../../src/main/errors/ErroApp';
 import { EquipamentoIndisponivelError } from '../../../../src/main/errors/ReservaErrors';
 import { MultaPercentual } from '../../../../src/main/services/multa/MultaPercentual';
 import { ItemReservaService } from '../../../../src/main/services/reserva/ItemReservaService';

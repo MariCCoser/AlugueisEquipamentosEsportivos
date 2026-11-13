@@ -1,4 +1,4 @@
-import { ValidacaoError } from '../errors/DominioError';
+import { ValidacaoError } from '../errors/ErroApp';
 
 /**
  * Valor monetário guardado em CENTAVOS inteiros.

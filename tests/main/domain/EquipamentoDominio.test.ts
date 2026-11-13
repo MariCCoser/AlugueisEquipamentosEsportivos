@@ -3,7 +3,7 @@ import {
   EquipamentoDominio,
   type DadosEquipamento
 } from '../../../src/main/domain/EquipamentoDominio';
-import { ValidacaoError } from '../../../src/main/errors/DominioError';
+import { ValidacaoError } from '../../../src/main/errors/ErroApp';
 import { EquipamentoIndisponivelError } from '../../../src/main/errors/ReservaErrors';
 
 const bike: DadosEquipamento = {

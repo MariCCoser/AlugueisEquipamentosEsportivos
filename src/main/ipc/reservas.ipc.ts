@@ -6,7 +6,7 @@ import type {
   ReservaDTO,
   ReservaResumoDTO
 } from '@shared/dto/reserva.dto';
-import { NaoAutorizadoError } from '../errors/DominioError';
+import { NaoAutorizadoError } from '../errors/ErroApp';
 import type { Sessao } from '../security/Sessao';
 import { idSchema } from '../security/validators/campos.schema';
 import {
