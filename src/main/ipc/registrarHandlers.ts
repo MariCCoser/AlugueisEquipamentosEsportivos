@@ -38,7 +38,8 @@ export interface Guarda {
  * 1. origem: só a nossa tela pode chamar;
  * 2. permissão: PUBLICO / LOGADO / ADMIN (ver permissoes.ts);
  * 3. handler do domínio — ou "ainda não implementado", se ninguém registrou;
- * 4. try/catch: um erro inesperado vira mensagem amigável, sem mostrar detalhes técnicos.
+ * 4. try/catch: erro esperado (ErroApp) vira `falha` com o código, a mensagem e os campos dele;
+ *    qualquer outro erro vira mensagem genérica, sem mostrar detalhes técnicos.
  */
 export class RegistroIpc {
   private readonly handlers = new Map<CanalIpc, Handler>();
@@ -94,8 +95,8 @@ export class RegistroIpc {
       return await handler(entrada, evento);
     } catch (erro) {
       // Erro esperado (validação, não encontrado, regra...): a mensagem já é amigável.
-      if (erro instanceof ErroApp) return falha(erro.codigo, erro.message);
-      // Qualquer outro: o detalhe vai só para o terminal; a tela recebe uma mensagem genérica.
+      if (erro instanceof ErroApp) return falha(erro.codigo, erro.message, erro.campos);
+      // O detalhe vai só para o terminal; a tela recebe uma mensagem genérica.
       console.error(`[IPC ${canal}]`, erro);
       return falha('INTERNO', 'Erro inesperado. Tente novamente.');
     }

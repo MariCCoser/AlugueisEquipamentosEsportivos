@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Periodo } from '../../../src/main/domain/Periodo';
-import { ValidacaoError } from '../../../src/main/errors/DominioError';
+import { ValidacaoError } from '../../../src/main/errors/ErroApp';
 
 describe('Periodo', () => {
   describe('diárias', () => {

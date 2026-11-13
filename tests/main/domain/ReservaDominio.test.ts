@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Dinheiro } from '../../../src/main/domain/Dinheiro';
 import { Periodo } from '../../../src/main/domain/Periodo';
 import { ReservaDominio, type ItemDaReserva } from '../../../src/main/domain/ReservaDominio';
-import { RegraNegocioError, ValidacaoError } from '../../../src/main/errors/DominioError';
+import { RegraNegocioError, ValidacaoError } from '../../../src/main/errors/ErroApp';
 import { TransicaoInvalidaError } from '../../../src/main/errors/ReservaErrors';
 
 const itens: ItemDaReserva[] = [
