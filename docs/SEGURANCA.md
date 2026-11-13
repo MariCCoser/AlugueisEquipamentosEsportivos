@@ -92,6 +92,26 @@ object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'
 | Credenciais no **`.env`**, que está no `.gitignore` | Senhas não vão para o GitHub. O `.env.example` é só um modelo. |
 | Erros do banco não vão para a tela | Ver 1.2. |
 | `ON DELETE RESTRICT` nas tabelas com histórico financeiro | Um clique errado não apaga reservas, pagamentos e multas em cascata. |
+| Repositórios só usam **nomes de coluna declarados no código** | Nome de coluna não pode ir no `?`; por isso chaves desconhecidas vindas de fora são ignoradas e `ordenarPor` só aceita campos conhecidos. Texto de busca passa por `escaparLike`. |
+
+## 2.1 Permissões por canal (Pessoa 1)
+
+| Decisão | Por quê |
+|---|---|
+| Cada canal tem `PUBLICO`, `LOGADO` ou `ADMIN` em `src/main/ipc/permissoes.ts`, conferido no Main **antes** do handler | Esconder um botão na tela não protege nada; a tela é a parte menos confiável. O `Record<CanalIpc, ...>` faz o TypeScript acusar canal novo sem permissão. |
+| Quem está logado fica na `Sessao`, no Main | A tela não consegue se passar por outro usuário nem por ADMIN. |
+| Erros esperados (`ErroApp`) mostram a mensagem; os outros viram "Erro inesperado" | A pessoa entende o que houve, mas SQL e stack trace nunca chegam à tela. |
+
+## 2.2 API de notificações (Pessoa 1)
+
+| Decisão | Por quê |
+|---|---|
+| Escuta só em `127.0.0.1` | Ninguém da rede consegue chamar a API, só a própria máquina. |
+| Exige `Authorization: Bearer <NOTIFICACOES_CHAVE>`, comparada em tempo constante (`timingSafeEqual`) | Outro programa na máquina não dispara mensagens; a demora da resposta não revela pedaços da chave. A chave fica no `.env`. |
+| Valida todos os campos e limita o corpo a 10 KB | Dado estranho é recusado com 400; corpo gigante, com 413. |
+| O app manda só **nome, e-mail e telefone** do cliente | LGPD: CPF e endereço não saem do banco para a notificação. |
+| Sem `x-powered-by` e erros 500 sem detalhes | Não entrega pistas sobre a tecnologia nem sobre o erro interno. |
+| No app, `NotificacaoClient` tem tempo limite (`AbortSignal.timeout`) | Se a API cair ou travar, a tela recebe uma mensagem amigável em vez de ficar esperando para sempre. |
 
 ---
 

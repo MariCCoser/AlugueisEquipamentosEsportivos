@@ -3,6 +3,7 @@ import { TODOS_OS_CANAIS, type CanalIpc } from '@shared/ipc-channels';
 import { falha, type Resposta } from '@shared/dto/resposta';
 import type { Perfil } from '@shared/models/enums';
 import { DominioError, ValidacaoError } from '../errors/DominioError';
+import { ErroApp } from '../errors/ErroApp';
 import { PERMISSOES } from './permissoes';
 
 /**
@@ -38,7 +39,7 @@ export interface Guarda {
  * 1. origem: só a nossa tela pode chamar;
  * 2. permissão: PUBLICO / LOGADO / ADMIN (ver permissoes.ts);
  * 3. handler do domínio — ou "ainda não implementado", se ninguém registrou;
- * 4. try/catch: erro de domínio (DominioError) vira `falha` com o código e a mensagem dele;
+ * 4. try/catch: erro esperado (DominioError/ErroApp) vira `falha` com o código e a mensagem dele;
  *    qualquer outro erro vira mensagem genérica, sem mostrar detalhes técnicos.
  */
 export class RegistroIpc {
@@ -102,6 +103,7 @@ export class RegistroIpc {
           erro instanceof ValidacaoError ? erro.campos : undefined
         );
       }
+      if (erro instanceof ErroApp) return falha(erro.codigo, erro.message);
       // O detalhe vai só para o terminal; a tela recebe uma mensagem genérica.
       console.error(`[IPC ${canal}]`, erro);
       return falha('INTERNO', 'Erro inesperado. Tente novamente.');

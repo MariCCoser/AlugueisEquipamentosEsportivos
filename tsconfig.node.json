@@ -28,6 +28,7 @@
     "src/main/**/*",
     "src/preload/**/*",
     "src/shared/**/*",
-    "tests/**/*"
+    "tests/**/*",
+    "api-notificacoes/**/*"
   ]
 }
