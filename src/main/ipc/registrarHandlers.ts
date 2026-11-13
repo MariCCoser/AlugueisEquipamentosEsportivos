@@ -2,6 +2,7 @@ import { ipcMain, type IpcMainInvokeEvent } from 'electron';
 import { TODOS_OS_CANAIS, type CanalIpc } from '@shared/ipc-channels';
 import { falha, type Resposta } from '@shared/dto/resposta';
 import type { Perfil } from '@shared/models/enums';
+import { ErroApp } from '../errors/ErroApp';
 import { PERMISSOES } from './permissoes';
 
 /**
@@ -92,7 +93,9 @@ export class RegistroIpc {
     try {
       return await handler(entrada, evento);
     } catch (erro) {
-      // O detalhe vai só para o terminal; a tela recebe uma mensagem genérica.
+      // Erro esperado (validação, não encontrado, regra...): a mensagem já é amigável.
+      if (erro instanceof ErroApp) return falha(erro.codigo, erro.message);
+      // Qualquer outro: o detalhe vai só para o terminal; a tela recebe uma mensagem genérica.
       console.error(`[IPC ${canal}]`, erro);
       return falha('INTERNO', 'Erro inesperado. Tente novamente.');
     }

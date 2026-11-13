@@ -40,6 +40,7 @@ O `.npmrc` do projeto usa `bin-links=false` para o `npm install` funcionar tamb�
 | `npm run db:setup`                  | Cria banco, usuário do app, tabelas e dados de exemplo      |
 | `npm run db:status`                 | Mostra quantos registros tem em cada tabela                 |
 | `npm run db:resetar -- --confirmar` | Apaga o banco e recria do zero                              |
+| `npm run api:notificacoes`          | Liga a nossa API de notificações (ver `api-notificacoes/`)  |
 
 ### Linux: erro do `chrome-sandbox`
 

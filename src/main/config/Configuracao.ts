@@ -16,6 +16,14 @@ export interface ConfigAdminBanco {
   password: string;
 }
 
+/** Onde está a nossa API de notificações e a chave para usá-la. */
+export interface ConfigNotificacoes {
+  url: string;
+  chave: string;
+  /** Quanto tempo esperar a resposta antes de desistir. */
+  tempoLimiteMs: number;
+}
+
 export class ConfiguracaoError extends Error {
   constructor(mensagem: string) {
     super(mensagem);
@@ -47,6 +55,18 @@ export class Configuracao {
     return {
       user: this.texto('DB_ADMIN_USER', 'root'),
       password: this.env['DB_ADMIN_PASSWORD'] ?? ''
+    };
+  }
+
+  notificacoes(): ConfigNotificacoes {
+    const url = this.texto('NOTIFICACOES_URL', 'http://127.0.0.1:3333');
+    if (!/^https?:\/\//.test(url)) {
+      throw new ConfiguracaoError('NOTIFICACOES_URL deve começar com http:// ou https://');
+    }
+    return {
+      url: url.replace(/\/+$/, ''), // sem barra no final
+      chave: this.obrigatoria('NOTIFICACOES_CHAVE'),
+      tempoLimiteMs: this.inteiro('NOTIFICACOES_TEMPO_LIMITE_MS', 5000)
     };
   }
 

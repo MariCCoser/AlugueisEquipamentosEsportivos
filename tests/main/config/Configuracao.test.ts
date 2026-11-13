@@ -40,4 +40,20 @@ describe('Configuracao', () => {
   it('usa root como admin padrão', () => {
     expect(new Configuracao(envValido).adminBanco()).toEqual({ user: 'root', password: '' });
   });
+
+  it('lê a configuração da API de notificações, tirando a barra do final', () => {
+    const env = { NOTIFICACOES_URL: 'http://127.0.0.1:4000/', NOTIFICACOES_CHAVE: 'abc' };
+    expect(new Configuracao(env).notificacoes()).toEqual({
+      url: 'http://127.0.0.1:4000',
+      chave: 'abc',
+      tempoLimiteMs: 5000
+    });
+  });
+
+  it('notificações: exige a chave e recusa URL sem http', () => {
+    expect(() => new Configuracao({}).notificacoes()).toThrow(/NOTIFICACOES_CHAVE/);
+    expect(() =>
+      new Configuracao({ NOTIFICACOES_URL: 'ftp://x', NOTIFICACOES_CHAVE: 'abc' }).notificacoes()
+    ).toThrow(/http/);
+  });
 });
