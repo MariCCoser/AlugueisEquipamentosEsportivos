@@ -3,7 +3,13 @@ import { app, BrowserWindow } from 'electron';
 import { Configuracao } from './config/Configuracao';
 import { Database } from './database/Database';
 import { registrarAppIpc, type DependenciasApp } from './ipc/app.ipc';
+import { registrarClientesIpc } from './ipc/clientes.ipc';
+import { registrarEquipamentosIpc } from './ipc/equipamentos.ipc';
 import { RegistroIpc } from './ipc/registrarHandlers';
+import { criarRepositorios } from './repositories';
+import { ClienteService } from './services/ClienteService';
+import { DisponibilidadeService } from './services/DisponibilidadeService';
+import { EquipamentoService } from './services/EquipamentoService';
 import { EndurecimentoElectron } from './security/EndurecimentoElectron';
 import { PoliticaOrigem } from './security/PoliticaOrigem';
 import { Sessao } from './security/Sessao';
@@ -59,10 +65,37 @@ class Aplicacao {
       perfilAtual: () => this.sessao.perfilAtual()
     });
 
-    registrarAppIpc(registro, this.criarDependencias());
-    // Próximos domínios: registrarAuthIpc(registro, ...), registrarClientesIpc(registro, ...)
+    const dependencias = this.criarDependencias();
+    registrarAppIpc(registro, dependencias);
+    // Sem banco configurado, os canais de domínio respondem "ainda não implementado"
+    if (dependencias.db) this.registrarDominios(registro, dependencias.db);
 
     registro.ativar();
+  }
+
+  /**
+   * Monta repositórios e services (injeção de dependência pelo construtor) e
+   * registra os canais de cada domínio. Próximos: auth, usuarios, reservas...
+   */
+  private registrarDominios(registro: RegistroIpc, db: Database): void {
+    const repos = criarRepositorios(db);
+    const disponibilidade = new DisponibilidadeService(
+      repos.equipamentos,
+      repos.manutencoes,
+      repos.reservas
+    );
+
+    registrarClientesIpc(registro, new ClienteService(repos.clientes, repos.reservas));
+    registrarEquipamentosIpc(
+      registro,
+      new EquipamentoService(
+        repos.equipamentos,
+        repos.categorias,
+        repos.fornecedores,
+        disponibilidade
+      ),
+      disponibilidade
+    );
   }
 
   /** Composição: cria os objetos compartilhados uma única vez. */
