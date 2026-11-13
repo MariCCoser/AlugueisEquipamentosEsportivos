@@ -8,10 +8,16 @@ import { registrarClientesIpc } from './ipc/clientes.ipc';
 import { registrarEquipamentosIpc } from './ipc/equipamentos.ipc';
 import { registrarNotificacoesIpc } from './ipc/notificacoes.ipc';
 import { RegistroIpc } from './ipc/registrarHandlers';
+import { registrarReservasIpc } from './ipc/reservas.ipc';
 import { criarRepositorios } from './repositories';
+import { CalendarioISO } from './domain/CalendarioISO';
 import { ClienteService } from './services/ClienteService';
 import { DisponibilidadeService } from './services/DisponibilidadeService';
 import { EquipamentoService } from './services/EquipamentoService';
+import { FabricaEstrategiaMulta } from './services/multa/FabricaEstrategiaMulta';
+import { ItemReservaService } from './services/reserva/ItemReservaService';
+import { ReservaService } from './services/reserva/ReservaService';
+import { UnidadeDeTrabalho } from './services/UnidadeDeTrabalho';
 import { NotificacaoService } from './services/NotificacaoService';
 import { EndurecimentoElectron } from './security/EndurecimentoElectron';
 import { PoliticaOrigem } from './security/PoliticaOrigem';
@@ -79,10 +85,11 @@ class Aplicacao {
 
   /**
    * Monta repositórios e services (injeção de dependência pelo construtor) e
-   * registra os canais de cada domínio. Próximos: auth, usuarios, reservas...
+   * registra os canais de cada domínio. Próximos: auth, usuarios, multas...
    */
   private registrarDominios(registro: RegistroIpc, db: Database): void {
-    const repos = criarRepositorios(db);
+    const dados = new UnidadeDeTrabalho(db);
+    const repos = dados.repos;
     const disponibilidade = new DisponibilidadeService(
       repos.equipamentos,
       repos.manutencoes,
@@ -99,6 +106,12 @@ class Aplicacao {
         disponibilidade
       ),
       disponibilidade
+    );
+    registrarReservasIpc(
+      registro,
+      new ReservaService(dados, FabricaEstrategiaMulta.criar(), () => CalendarioISO.hoje()),
+      new ItemReservaService(dados),
+      this.sessao
     );
   }
 

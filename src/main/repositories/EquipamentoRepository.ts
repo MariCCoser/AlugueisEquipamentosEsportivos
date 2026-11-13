@@ -65,6 +65,20 @@ export class EquipamentoRepository extends BaseRepository<Equipamento, NovoEquip
     return this.selecionar(`id IN (${marcadores})`, unicos);
   }
 
+  /**
+   * Busca e TRAVA os equipamentos até o fim da transação (SELECT ... FOR UPDATE).
+   * Outra transação que tente travar os mesmos itens espera esta terminar — é o
+   * que impede duas reservas simultâneas do mesmo equipamento.
+   * Só faz efeito dentro de `db.transacao(...)`. Ordena por id para que duas
+   * transações travem sempre na mesma ordem (evita deadlock).
+   */
+  async travarPorIds(ids: number[]): Promise<Equipamento[]> {
+    const unicos = [...new Set(ids)];
+    if (unicos.length === 0) return [];
+    const marcadores = unicos.map(() => '?').join(', ');
+    return this.selecionar(`id IN (${marcadores})`, unicos, 'ORDER BY id FOR UPDATE');
+  }
+
   async atualizarStatus(id: number, status: StatusEquipamento): Promise<boolean> {
     const { linhasAfetadas } = await this.db.executar(
       'UPDATE equipamentos SET status = ? WHERE id = ?',

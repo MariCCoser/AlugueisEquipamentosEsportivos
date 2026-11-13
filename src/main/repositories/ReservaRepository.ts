@@ -1,8 +1,20 @@
-import type { DataISO } from '@shared/dto/resposta';
+import type { DataISO, Paginado } from '@shared/dto/resposta';
 import type { StatusReserva } from '@shared/models/enums';
 import type { NovaReserva, Reserva } from '@shared/models/entidades';
 import type { ParametroSql } from '../database/Database';
-import { BaseRepository, type CamposGravaveis } from './BaseRepository';
+import {
+  BaseRepository,
+  POR_PAGINA_MAXIMO,
+  POR_PAGINA_PADRAO,
+  type CamposGravaveis
+} from './BaseRepository';
+
+export interface FiltroReservas {
+  status?: StatusReserva;
+  clienteId?: number;
+  dataInicio?: DataISO;
+  dataFim?: DataISO;
+}
 
 /** Status em que a reserva "segura" o equipamento no período. */
 export const STATUS_QUE_BLOQUEIAM: readonly StatusReserva[] = ['PENDENTE', 'ATIVA'];
@@ -69,6 +81,55 @@ export class ReservaRepository extends BaseRepository<Reserva, NovaReserva> {
     }
     const [linha] = await this.db.consultar<{ total: number | string }>(sql, params);
     return Number(linha?.total ?? 0) > 0;
+  }
+
+  /**
+   * Filtros combináveis da tela de reservas, com paginação no banco.
+   * Período: reservas que tocam o intervalo [dataInicio, dataFim] (bordas inclusivas).
+   * Mais recentes primeiro.
+   */
+  async filtrar(
+    filtro: FiltroReservas = {},
+    opcoes: { pagina?: number; porPagina?: number } = {}
+  ): Promise<Paginado<Reserva>> {
+    const condicoes: string[] = [];
+    const params: ParametroSql[] = [];
+    if (filtro.status) {
+      condicoes.push('status = ?');
+      params.push(filtro.status);
+    }
+    if (filtro.clienteId !== undefined) {
+      condicoes.push('cliente_id = ?');
+      params.push(filtro.clienteId);
+    }
+    if (filtro.dataFim) {
+      condicoes.push('data_retirada <= ?');
+      params.push(filtro.dataFim);
+    }
+    if (filtro.dataInicio) {
+      condicoes.push('data_devolucao_prevista >= ?');
+      params.push(filtro.dataInicio);
+    }
+    const onde = condicoes.join(' AND ');
+    const pagina = Math.max(1, Math.floor(opcoes.pagina ?? 1) || 1);
+    const porPagina = Math.min(
+      POR_PAGINA_MAXIMO,
+      Math.max(1, Math.floor(opcoes.porPagina ?? POR_PAGINA_PADRAO) || POR_PAGINA_PADRAO)
+    );
+    const [itens, total] = await Promise.all([
+      this.selecionar(onde, params, 'ORDER BY data_retirada DESC, id DESC LIMIT ? OFFSET ?', [
+        porPagina,
+        (pagina - 1) * porPagina
+      ]),
+      this.contarOnde(onde, params)
+    ]);
+    return { itens, total, pagina, porPagina };
+  }
+
+  /** Busca e TRAVA a reserva até o fim da transação (ver EquipamentoRepository.travarPorIds). */
+  async travar(id: number): Promise<Reserva | null> {
+    const [reserva] = await this.selecionar('id = ?', [id], 'FOR UPDATE');
+    return reserva ?? null;
   }
 
   async atualizarStatus(id: number, status: StatusReserva): Promise<boolean> {
