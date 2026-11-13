@@ -6,6 +6,8 @@ import { NotificacaoClient } from './integrations/NotificacaoClient';
 import { registrarAppIpc, type DependenciasApp } from './ipc/app.ipc';
 import { registrarClientesIpc } from './ipc/clientes.ipc';
 import { registrarEquipamentosIpc } from './ipc/equipamentos.ipc';
+import { registrarFinanceiroIpc } from './ipc/financeiro.ipc';
+import { registrarManutencoesIpc } from './ipc/manutencoes.ipc';
 import { registrarNotificacoesIpc } from './ipc/notificacoes.ipc';
 import { RegistroIpc } from './ipc/registrarHandlers';
 import { registrarReservasIpc } from './ipc/reservas.ipc';
@@ -14,7 +16,12 @@ import { CalendarioISO } from './domain/CalendarioISO';
 import { ClienteService } from './services/ClienteService';
 import { DisponibilidadeService } from './services/DisponibilidadeService';
 import { EquipamentoService } from './services/EquipamentoService';
+import { MultaService } from './services/financeiro/MultaService';
+import { PagamentoService } from './services/financeiro/PagamentoService';
+import { HistoricoClienteService } from './services/HistoricoClienteService';
+import { ManutencaoService } from './services/ManutencaoService';
 import { FabricaEstrategiaMulta } from './services/multa/FabricaEstrategiaMulta';
+import { DevolucaoService } from './services/reserva/DevolucaoService';
 import { ItemReservaService } from './services/reserva/ItemReservaService';
 import { ReservaService } from './services/reserva/ReservaService';
 import { UnidadeDeTrabalho } from './services/UnidadeDeTrabalho';
@@ -90,13 +97,19 @@ class Aplicacao {
   private registrarDominios(registro: RegistroIpc, db: Database): void {
     const dados = new UnidadeDeTrabalho(db);
     const repos = dados.repos;
+    const hoje = (): string => CalendarioISO.hoje();
+    const multa = FabricaEstrategiaMulta.criar(); // padrão do grupo: 10% por dia de atraso
     const disponibilidade = new DisponibilidadeService(
       repos.equipamentos,
       repos.manutencoes,
       repos.reservas
     );
 
-    registrarClientesIpc(registro, new ClienteService(repos.clientes, repos.reservas));
+    registrarClientesIpc(
+      registro,
+      new ClienteService(repos.clientes, repos.reservas),
+      new HistoricoClienteService(dados)
+    );
     registrarEquipamentosIpc(
       registro,
       new EquipamentoService(
@@ -109,10 +122,13 @@ class Aplicacao {
     );
     registrarReservasIpc(
       registro,
-      new ReservaService(dados, FabricaEstrategiaMulta.criar(), () => CalendarioISO.hoje()),
+      new ReservaService(dados, multa, hoje),
       new ItemReservaService(dados),
+      new DevolucaoService(dados, multa, hoje),
       this.sessao
     );
+    registrarFinanceiroIpc(registro, new MultaService(dados, multa), new PagamentoService(dados));
+    registrarManutencoesIpc(registro, new ManutencaoService(dados, hoje));
   }
 
   /** Canais de notificação: precisam do banco (para achar o cliente) e da chave da API no .env. */

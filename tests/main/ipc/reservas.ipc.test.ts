@@ -1,6 +1,7 @@
 import type { IpcMainInvokeEvent } from 'electron';
 import { describe, expect, it, vi } from 'vitest';
 import type { UsuarioSessaoDTO } from '../../../src/shared/dto/auth.dto';
+import type { DevolucaoService } from '../../../src/main/services/reserva/DevolucaoService';
 import type { ItemReservaService } from '../../../src/main/services/reserva/ItemReservaService';
 import type { ReservaService } from '../../../src/main/services/reserva/ReservaService';
 
@@ -32,6 +33,7 @@ function montar(usuario: UsuarioSessaoDTO | null = funcionaria) {
     registro,
     reservas as unknown as ReservaService,
     itens as unknown as ItemReservaService,
+    { registrar: vi.fn() } as unknown as DevolucaoService,
     { usuarioAtual: () => usuario }
   );
   return { registro, reservas, itens };
@@ -46,11 +48,9 @@ const pedido = {
 };
 
 describe('canais de reservas', () => {
-  it('registram tudo, menos a devolução (etapa 4)', () => {
+  it('registram todos os canais de reservas (inclusive a devolução) e de itens', () => {
     const pendentes = montar().registro.canaisPendentes();
-    expect(pendentes.filter((c) => c.startsWith('reservas:'))).toEqual([
-      'reservas:registrarDevolucao'
-    ]);
+    expect(pendentes.filter((c) => c.startsWith('reservas:'))).toEqual([]);
     expect(pendentes.filter((c) => c.startsWith('itensReserva:'))).toEqual([]);
   });
 

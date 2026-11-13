@@ -1,6 +1,7 @@
 import type {
   Cliente,
   Equipamento,
+  Fornecedor,
   ItemReserva,
   Manutencao,
   Multa,
@@ -9,7 +10,14 @@ import type {
   Reserva
 } from '../../../../src/shared/models/entidades';
 import type { DataISO, Paginado } from '../../../../src/shared/dto/resposta';
-import type { StatusEquipamento, StatusReserva } from '../../../../src/shared/models/enums';
+import type {
+  EstadoConservacao,
+  FormaPagamento,
+  StatusEquipamento,
+  StatusReserva,
+  TipoFornecedor,
+  TipoPagamento
+} from '../../../../src/shared/models/enums';
 import type { Repositorios } from '../../../../src/main/repositories';
 import type { FiltroReservas } from '../../../../src/main/repositories/ReservaRepository';
 import type { AcessoDados } from '../../../../src/main/services/UnidadeDeTrabalho';
@@ -24,6 +32,7 @@ interface Tabelas {
   manutencoes: Manutencao[];
   pagamentos: Pagamento[];
   multas: Multa[];
+  fornecedores: Fornecedor[];
 }
 
 /**
@@ -40,7 +49,8 @@ export class BancoEmMemoria implements AcessoDados {
     itens: [],
     manutencoes: [],
     pagamentos: [],
-    multas: []
+    multas: [],
+    fornecedores: []
   };
   private proximoId = 100;
   /** Quantas transações foram abertas (para conferir que a operação usou uma). */
@@ -116,17 +126,55 @@ export class BancoEmMemoria implements AcessoDados {
     });
   }
 
-  pagamento(reservaId: number, valor: number): void {
-    this.t.pagamentos.push({
+  pagamento(
+    reservaId: number,
+    valor: number,
+    tipo: TipoPagamento = 'ALUGUEL',
+    forma: FormaPagamento = 'PIX',
+    multaId: number | null = null
+  ): Pagamento {
+    const pg: Pagamento = {
       id: this.id(),
       reservaId,
-      multaId: null,
-      tipo: 'ALUGUEL',
-      forma: 'PIX',
+      multaId,
+      tipo,
+      forma,
       valor,
       data: '2026-11-13 10:00:00',
       ...DATAS
-    });
+    };
+    this.t.pagamentos.push(pg);
+    return pg;
+  }
+
+  fornecedor(tipo: TipoFornecedor, extra: Partial<Fornecedor> = {}): Fornecedor {
+    const f: Fornecedor = {
+      id: this.id(),
+      razaoSocial: tipo === 'COMPRA' ? 'Distribuidora' : 'Oficina',
+      cnpj: String(this.proximoId).padStart(14, '0'),
+      tipo,
+      contato: null,
+      telefone: null,
+      email: null,
+      ...DATAS,
+      ...extra
+    };
+    this.t.fornecedores.push(f);
+    return f;
+  }
+
+  multa(reservaId: number, valor: number): Multa {
+    const m: Multa = {
+      id: this.id(),
+      reservaId,
+      diasAtraso: 1,
+      valor,
+      quitada: false,
+      dataQuitacao: null,
+      ...DATAS
+    };
+    this.t.multas.push(m);
+    return m;
   }
 
   equip(id: number): Equipamento {
@@ -237,6 +285,11 @@ export class BancoEmMemoria implements AcessoDados {
         b().itens = b().itens.filter((i) => i.id !== id);
         return true;
       },
+      registrarDevolucao: async (id: number, estado: EstadoConservacao) => {
+        const item = b().itens.find((i) => i.id === id);
+        if (item) item.estadoDevolucao = estado;
+        return !!item;
+      },
       excluirDaReserva: async (reservaId: number) => {
         const antes = b().itens.length;
         b().itens = b().itens.filter((i) => i.reservaId !== reservaId);
@@ -255,6 +308,12 @@ export class BancoEmMemoria implements AcessoDados {
           .equipamentos.filter((e) => ids.includes(e.id))
           .map((e) => ({ ...e })),
       buscarPorId: async (id: number) => copiar(b().equipamentos.find((e) => e.id === id)),
+      atualizar: async (id: number, dados: Partial<Equipamento>) => {
+        const e = b().equipamentos.find((x) => x.id === id);
+        if (!e) return null;
+        Object.assign(e, dados);
+        return { ...e };
+      },
       atualizarStatus: async (id: number, status: StatusEquipamento) => {
         const e = b().equipamentos.find((x) => x.id === id);
         if (e) e.status = status;
@@ -269,22 +328,133 @@ export class BancoEmMemoria implements AcessoDados {
       clientes: {
         buscarPorId: async (id: number) => copiar(b().clientes.find((c) => c.id === id))
       },
+      fornecedores: {
+        buscarPorId: async (id: number) => copiar(b().fornecedores.find((f) => f.id === id)),
+        listarPorTipo: async (tipo: TipoFornecedor) =>
+          b().fornecedores.filter((f) => f.tipo === tipo)
+      },
       manutencoes: {
         buscarEmAbertoDoEquipamento: async (id: number) =>
-          copiar(b().manutencoes.find((m) => m.equipamentoId === id && m.dataRetorno === null))
+          copiar(b().manutencoes.find((m) => m.equipamentoId === id && m.dataRetorno === null)),
+        buscarPorId: async (id: number) => copiar(b().manutencoes.find((m) => m.id === id)),
+        criar: async (novo: Partial<Manutencao>) => {
+          const m = {
+            dataRetorno: null,
+            custo: null,
+            estadoRetorno: null,
+            ...novo,
+            id: this.id(),
+            ...DATAS
+          } as Manutencao;
+          b().manutencoes.push(m);
+          return { ...m };
+        },
+        atualizar: async (id: number, dados: Partial<Manutencao>) => {
+          const m = b().manutencoes.find((x) => x.id === id);
+          if (!m) return null;
+          for (const [k, v] of Object.entries(dados))
+            if (v !== undefined) Object.assign(m, { [k]: v });
+          return { ...m };
+        },
+        registrarRetorno: async (id: number, dados: Partial<Manutencao>) => {
+          const m = b().manutencoes.find((x) => x.id === id);
+          if (!m) return null;
+          Object.assign(m, dados);
+          return { ...m };
+        },
+        excluir: async (id: number) => {
+          b().manutencoes = b().manutencoes.filter((m) => m.id !== id);
+          return true;
+        },
+        filtrar: async (f: { abertas?: boolean } = {}) =>
+          b().manutencoes.filter(
+            (m) => f.abertas === undefined || (m.dataRetorno === null) === f.abertas
+          ),
+        listarEmAberto: async () => b().manutencoes.filter((m) => m.dataRetorno === null),
+        listarPorEquipamento: async (id: number) =>
+          b().manutencoes.filter((m) => m.equipamentoId === id)
       },
       pagamentos: {
-        somarPorReserva: async (id: number) =>
+        somarPorReserva: async (id: number, tipo?: TipoPagamento) =>
           b()
-            .pagamentos.filter((p) => p.reservaId === id)
+            .pagamentos.filter((p) => p.reservaId === id && (!tipo || p.tipo === tipo))
             .reduce((s, p) => s + p.valor, 0),
         somarPorMulta: async (id: number) =>
           b()
             .pagamentos.filter((p) => p.multaId === id)
-            .reduce((s, p) => s + p.valor, 0)
+            .reduce((s, p) => s + p.valor, 0),
+        buscarPorId: async (id: number) => copiar(b().pagamentos.find((p) => p.id === id)),
+        listarPorReserva: async (id: number) =>
+          b()
+            .pagamentos.filter((p) => p.reservaId === id)
+            .map((p) => ({ ...p })),
+        listarPorMulta: async (id: number) => b().pagamentos.filter((p) => p.multaId === id),
+        filtrar: async (f: { tipo?: TipoPagamento } = {}) =>
+          b().pagamentos.filter((p) => !f.tipo || p.tipo === f.tipo),
+        criar: async (novo: Partial<Pagamento>) => {
+          const pg = {
+            multaId: null,
+            data: '2026-11-13 12:00:00',
+            ...novo,
+            id: this.id(),
+            ...DATAS
+          } as Pagamento;
+          b().pagamentos.push(pg);
+          return { ...pg };
+        },
+        atualizar: async (id: number, dados: Partial<Pagamento>) => {
+          const pg = b().pagamentos.find((x) => x.id === id);
+          if (!pg) return null;
+          for (const [k, v] of Object.entries(dados))
+            if (v !== undefined) Object.assign(pg, { [k]: v });
+          return { ...pg };
+        },
+        excluir: async (id: number) => {
+          b().pagamentos = b().pagamentos.filter((p) => p.id !== id);
+          return true;
+        }
       },
       multas: {
-        buscarPorReserva: async (id: number) => copiar(b().multas.find((m) => m.reservaId === id))
+        buscarPorReserva: async (id: number) => copiar(b().multas.find((m) => m.reservaId === id)),
+        buscarPorId: async (id: number) => copiar(b().multas.find((m) => m.id === id)),
+        criar: async (novo: Partial<Multa>) => {
+          if (b().multas.some((m) => m.reservaId === novo.reservaId)) {
+            throw Object.assign(new Error('duplicada'), { code: 'ER_DUP_ENTRY' });
+          }
+          const m = {
+            quitada: false,
+            dataQuitacao: null,
+            ...novo,
+            id: this.id(),
+            ...DATAS
+          } as Multa;
+          b().multas.push(m);
+          return { ...m };
+        },
+        atualizar: async (id: number, dados: Partial<Multa>) => {
+          const m = b().multas.find((x) => x.id === id);
+          if (!m) return null;
+          for (const [k, v] of Object.entries(dados))
+            if (v !== undefined) Object.assign(m, { [k]: v });
+          return { ...m };
+        },
+        excluir: async (id: number) => {
+          b().multas = b().multas.filter((m) => m.id !== id);
+          return true;
+        },
+        quitar: async (id: number) => {
+          const m = b().multas.find((x) => x.id === id && !x.quitada);
+          if (m) Object.assign(m, { quitada: true, dataQuitacao: '2026-11-13 12:00:00' });
+          return !!m;
+        },
+        reabrir: async (id: number) => {
+          const m = b().multas.find((x) => x.id === id && x.quitada);
+          if (m) Object.assign(m, { quitada: false, dataQuitacao: null });
+          return !!m;
+        },
+        filtrar: async (f: { quitada?: boolean } = {}) =>
+          b().multas.filter((m) => f.quitada === undefined || m.quitada === f.quitada),
+        listarEmAberto: async () => b().multas.filter((m) => !m.quitada)
       }
     } as unknown as Repositorios;
   }

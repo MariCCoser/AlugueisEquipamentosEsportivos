@@ -1,5 +1,6 @@
 import { IPC } from '@shared/ipc-channels';
 import { sucesso, type Paginado } from '@shared/dto/resposta';
+import type { DevolucaoResultadoDTO } from '@shared/dto/devolucao.dto';
 import type {
   ItemReservaDTO,
   ReservaAtrasadaDTO,
@@ -16,21 +17,21 @@ import {
   criarItemReservaSchema,
   criarReservaSchema,
   filtroReservaSchema,
+  registrarDevolucaoSchema,
   reservaIdSchema
 } from '../security/validators/reserva.schema';
 import { Validador } from '../security/validators/Validador';
+import type { DevolucaoService } from '../services/reserva/DevolucaoService';
 import type { ItemReservaService } from '../services/reserva/ItemReservaService';
 import type { ReservaService } from '../services/reserva/ReservaService';
 import type { RegistroIpc } from './registrarHandlers';
 
-/**
- * Canais `reservas:*` e `itensReserva:*`.
- * `reservas:registrarDevolucao` entra na etapa 4 (devolução e multas).
- */
+/** Canais `reservas:*` (inclui a devolução) e `itensReserva:*`. */
 export function registrarReservasIpc(
   registro: RegistroIpc,
   reservas: ReservaService,
   itens: ItemReservaService,
+  devolucao: DevolucaoService,
   sessao: Pick<Sessao, 'usuarioAtual'>
 ): void {
   // ---------- reservas ----------
@@ -73,6 +74,10 @@ export function registrarReservasIpc(
 
   registro.registrar<ReservaAtrasadaDTO[]>(IPC.reservas.listarAtrasadas, async () =>
     sucesso(await reservas.listarAtrasadas())
+  );
+
+  registro.registrar<DevolucaoResultadoDTO>(IPC.reservas.registrarDevolucao, async (entrada) =>
+    sucesso(await devolucao.registrar(Validador.validar(registrarDevolucaoSchema, entrada)))
   );
 
   // ---------- itens da reserva ----------
