@@ -17,6 +17,11 @@ export class ItemReservaRepository extends BaseRepository<ItemReserva, NovoItemR
     return this.selecionar('reserva_id = ?', [reservaId]);
   }
 
+  /** Itens da reserva com trava (FOR UPDATE), para ler sem "congelar" a foto da transação. */
+  travarDaReserva(reservaId: number): Promise<ItemReserva[]> {
+    return this.selecionar('reserva_id = ?', [reservaId], 'ORDER BY id FOR UPDATE');
+  }
+
   listarPorEquipamento(equipamentoId: number): Promise<ItemReserva[]> {
     return this.selecionar('equipamento_id = ?', [equipamentoId], 'ORDER BY id DESC');
   }
