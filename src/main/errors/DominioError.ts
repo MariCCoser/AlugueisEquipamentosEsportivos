@@ -41,3 +41,8 @@ export class ValidacaoError extends DominioError {
     super(mensagem);
   }
 }
+
+/** Operação exige um usuário logado (ex.: registrar quem criou a reserva). */
+export class NaoAutorizadoError extends DominioError {
+  readonly codigo = 'NAO_AUTORIZADO';
+}
