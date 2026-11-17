@@ -4,6 +4,7 @@ import type { DefinicaoRota } from './util/rotas';
 import type { Tela } from './nucleo/Tela';
 import { CategoriasTela } from './pages/categorias/CategoriasTela';
 import { EmConstrucaoTela } from './pages/EmConstrucaoTela';
+import { FornecedoresTela } from './pages/fornecedores/FornecedoresTela';
 import { InicioTela } from './pages/InicioTela';
 
 /** Itens do menu lateral, na ordem em que aparecem. */
@@ -29,7 +30,8 @@ const emConstrucao = (caminho: string): DefinicaoRota<Tela> => {
 /** Telas já construídas. */
 const TELAS: readonly DefinicaoRota<Tela>[] = [
   { caminho: '/', criar: () => new InicioTela() },
-  { caminho: '/categorias', criar: () => new CategoriasTela() }
+  { caminho: '/categorias', criar: () => new CategoriasTela() },
+  { caminho: '/fornecedores', criar: (_p, consulta) => new FornecedoresTela(consulta) }
 ];
 
 const ROTAS: readonly DefinicaoRota<Tela>[] = [

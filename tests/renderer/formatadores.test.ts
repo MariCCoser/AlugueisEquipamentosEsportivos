@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatarData, formatarMoeda, pluralizar } from '../../src/renderer/util/formatadores';
+import {
+  formatarData,
+  formatarMoeda,
+  formatarTelefone,
+  pluralizar
+} from '../../src/renderer/util/formatadores';
 
 describe('formatarMoeda', () => {
   it('usa o padrão brasileiro', () => {
@@ -26,5 +31,19 @@ describe('pluralizar', () => {
   it('escolhe singular ou plural', () => {
     expect(pluralizar(1, 'item', 'itens')).toBe('1 item');
     expect(pluralizar(3, 'item', 'itens')).toBe('3 itens');
+  });
+});
+
+describe('formatarTelefone', () => {
+  it('formata fixo e celular', () => {
+    expect(formatarTelefone('1133334444')).toBe('(11) 3333-4444');
+    expect(formatarTelefone('11987654321')).toBe('(11) 98765-4321');
+  });
+
+  it('serve de máscara enquanto a pessoa digita', () => {
+    expect(formatarTelefone('')).toBe('');
+    expect(formatarTelefone('1')).toBe('(1');
+    expect(formatarTelefone('113')).toBe('(11) 3');
+    expect(formatarTelefone('11333344')).toBe('(11) 3333-44');
   });
 });

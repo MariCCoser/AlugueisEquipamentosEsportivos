@@ -1,6 +1,7 @@
 import type { ApiExposta } from '@shared/api';
 import type { ErroDTO, Resposta } from '@shared/dto/resposta';
 import { simularCategorias } from './simulacoes/categorias';
+import { simularFornecedores } from './simulacoes/fornecedores';
 
 /**
  * window.api FALSO, usado só em desenvolvimento quando a tela é aberta
@@ -40,7 +41,8 @@ const respostas: Partial<Record<string, Simulacao>> = {
       ]
     })
   },
-  categorias: simularCategorias()
+  categorias: simularCategorias(),
+  fornecedores: simularFornecedores()
 };
 
 function naoSimulado<T>(dominio: string, metodo: string): Resposta<T> {

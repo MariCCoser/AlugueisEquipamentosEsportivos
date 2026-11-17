@@ -8,6 +8,7 @@ import { registrarCategoriasIpc } from './ipc/categorias.ipc';
 import { registrarClientesIpc } from './ipc/clientes.ipc';
 import { registrarEquipamentosIpc } from './ipc/equipamentos.ipc';
 import { registrarFinanceiroIpc } from './ipc/financeiro.ipc';
+import { registrarFornecedoresIpc } from './ipc/fornecedores.ipc';
 import { registrarManutencoesIpc } from './ipc/manutencoes.ipc';
 import { registrarNotificacoesIpc } from './ipc/notificacoes.ipc';
 import { RegistroIpc } from './ipc/registrarHandlers';
@@ -20,6 +21,7 @@ import { DisponibilidadeService } from './services/DisponibilidadeService';
 import { EquipamentoService } from './services/EquipamentoService';
 import { MultaService } from './services/financeiro/MultaService';
 import { PagamentoService } from './services/financeiro/PagamentoService';
+import { FornecedorService } from './services/FornecedorService';
 import { HistoricoClienteService } from './services/HistoricoClienteService';
 import { ManutencaoService } from './services/ManutencaoService';
 import { FabricaEstrategiaMulta } from './services/multa/FabricaEstrategiaMulta';
@@ -113,6 +115,7 @@ class Aplicacao {
       new HistoricoClienteService(dados)
     );
     registrarCategoriasIpc(registro, new CategoriaService(repos.categorias));
+    registrarFornecedoresIpc(registro, new FornecedorService(repos.fornecedores));
     registrarEquipamentosIpc(
       registro,
       new EquipamentoService(

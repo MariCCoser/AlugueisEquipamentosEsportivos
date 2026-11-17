@@ -7,6 +7,8 @@ export interface Coluna<T> {
   ordenar?: (a: T, b: T) => number;
   /** Alinha à direita (valores, quantidades). */
   numerica?: boolean;
+  /** Não quebra a linha no meio do valor (CNPJ, telefone, datas). */
+  semQuebra?: boolean;
 }
 
 export interface OpcoesTabela<T> {
@@ -25,17 +27,25 @@ type Direcao = 'ascending' | 'descending';
  */
 export class Tabela<T extends { id: number }> {
   readonly elemento: HTMLTableElement;
+  /** Caixa com rolagem horizontal própria, para tabelas largas não alargarem a tela. */
+  private readonly envoltorio: HTMLElement;
   private itens: T[] = [];
   private ordem: { coluna: number; direcao: Direcao } | null = null;
 
   constructor(private readonly opcoes: OpcoesTabela<T>) {
     this.elemento = el('table', { classe: 'tabela' });
+    this.envoltorio = el('div', { classe: 'tabela-rolagem' }, [this.elemento]);
   }
 
-  renderizar(itens: T[]): HTMLTableElement {
+  renderizar(itens: T[]): HTMLElement {
     this.itens = [...itens];
     this.desenhar();
-    return this.elemento;
+    return this.envoltorio;
+  }
+
+  private static classeCelula(coluna: Coluna<unknown>): string | undefined {
+    const classes = [coluna.numerica && 'numero', coluna.semQuebra && 'sem-quebra'];
+    return classes.filter(Boolean).join(' ') || undefined;
   }
 
   private desenhar(): void {
@@ -55,7 +65,9 @@ export class Tabela<T extends { id: number }> {
       this.itensOrdenados().map((item) =>
         el('tr', {}, [
           ...colunas.map((coluna) =>
-            el('td', { classe: coluna.numerica ? 'numero' : undefined }, [coluna.valor(item)])
+            el('td', { classe: Tabela.classeCelula(coluna as Coluna<unknown>) }, [
+              coluna.valor(item)
+            ])
           ),
           acoes ? el('td', { classe: 'acoes' }, acoes(item)) : null
         ])
@@ -72,7 +84,7 @@ export class Tabela<T extends { id: number }> {
   private criarCabecalho(coluna: Coluna<T>, indice: number): HTMLTableCellElement {
     const ativa = this.ordem?.coluna === indice;
     const th = el('th', {
-      classe: coluna.numerica ? 'numero' : undefined,
+      classe: Tabela.classeCelula(coluna as Coluna<unknown>),
       atributos: {
         scope: 'col',
         'aria-sort': coluna.ordenar ? (ativa ? this.ordem?.direcao : 'none') : undefined

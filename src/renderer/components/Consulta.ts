@@ -8,9 +8,10 @@ export interface OpcoesConsulta<T> {
   renderizar: (dados: T) => Node;
   /** Diz se a resposta deve ser tratada como "nada cadastrado". */
   estaVazio?: (dados: T) => boolean;
-  textoVazio?: string;
-  /** Botão opcional no estado vazio (ex.: "Cadastrar"). */
-  acaoVazio?: () => HTMLElement;
+  /** Texto do estado vazio; pode ser uma função (ex.: muda quando há busca). */
+  textoVazio?: string | (() => string);
+  /** Botão opcional no estado vazio (ex.: "Cadastrar"); `undefined` = sem botão. */
+  acaoVazio?: () => HTMLElement | undefined;
   textoCarregando?: string;
 }
 
@@ -62,7 +63,11 @@ export class Consulta<T> {
     const { estaVazio, textoVazio, acaoVazio } = this.opcoes;
     if (estaVazio?.(resposta.dados)) {
       this.alvo.replaceChildren(
-        estadoVazio(textoVazio ?? 'Nenhum registro encontrado.', acaoVazio?.())
+        estadoVazio(
+          (typeof textoVazio === 'function' ? textoVazio() : textoVazio) ??
+            'Nenhum registro encontrado.',
+          acaoVazio?.()
+        )
       );
       return;
     }
