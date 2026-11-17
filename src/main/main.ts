@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { app, BrowserWindow } from 'electron';
 import { Configuracao } from './config/Configuracao';
+import { LocalArquivoEnv } from './config/LocalArquivoEnv';
 import { Database } from './database/Database';
 import { NotificacaoClient } from './integrations/NotificacaoClient';
 import { registrarAppIpc, type DependenciasApp } from './ipc/app.ipc';
@@ -150,7 +151,15 @@ class Aplicacao {
 
   /** Composição: cria os objetos compartilhados uma única vez. */
   private criarDependencias(): DependenciasApp {
-    Configuracao.carregarArquivoEnv();
+    // No app instalado o .env fica fora do pacote (ver config/LocalArquivoEnv.ts).
+    Configuracao.carregarArquivoEnv(
+      new LocalArquivoEnv({
+        empacotado: app.isPackaged,
+        pastaDados: app.getPath('userData'),
+        executavel: process.execPath,
+        pastaAtual: process.cwd()
+      }).caminho()
+    );
     try {
       const config = new Configuracao().banco();
       this.db = new Database(config);
