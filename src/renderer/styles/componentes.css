@@ -204,14 +204,25 @@ th[aria-sort='descending'] .tabela__ordenar::after {
   font-size: 0.85rem;
 }
 
+/* Checkbox à esquerda, texto à direita; ajuda e erro ficam embaixo do texto. */
 .campo--checkbox {
-  flex-direction: row;
-  align-items: flex-start;
-  gap: var(--espaco-2);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  column-gap: var(--espaco-2);
+}
+
+.campo--checkbox input {
+  margin-top: 4px;
 }
 
 .campo--checkbox label {
   font-weight: 400;
+}
+
+.campo--checkbox .campo__ajuda,
+.campo--checkbox .campo__erro {
+  grid-column: 2;
 }
 
 /* ---------- Abas ---------- */
