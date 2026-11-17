@@ -76,7 +76,7 @@ export class DashboardTela implements Tela {
         titulo: 'Multas em aberto',
         valor: formatarMoeda(r.valorMultasEmAberto),
         detalhe: pluralizar(r.multasEmAberto, 'multa', 'multas'),
-        link: '/pagamentos'
+        link: '/pagamentos?aba=multas'
       }),
       cartaoNumero({
         titulo: 'Faturamento do mês',
