@@ -123,5 +123,13 @@ object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'
 - **Controle de acesso (P3):** `exigirPerfil('ADMIN')` nos handlers; a tela só esconde botões, quem bloqueia é o Main.
 - **Validação (P3):** zod em todo DTO que chega pelo IPC (CPF, CEP, e-mail, datas, valores).
 - **LGPD (P3):** CPF mascarado nas listagens, logs sem dados pessoais, coletar só o necessário.
-- **Interface (P4):** `textContent` em vez de `innerHTML`, respeitar a CSP.
+- **Interface (P4):** `textContent` em vez de `innerHTML`, respeitar a CSP (ver seção 7).
 - **APIs externas (P3):** chaves no `.env`, timeout, tratamento de falha de rede.
+
+---
+
+## 7. Interface (Pessoa 4)
+
+| Decisão | Onde | Por quê |
+|---|---|---|
+| Estilos carregados por `<link rel="stylesheet">` no `index.html` (`tema.css`, `layout.css`, `componentes.css`), e **não** por `import './x.css'` no `main.ts` | `src/renderer/index.html` | Em modo dev o Vite injeta o CSS importado como `<style>` inline, que a CSP (`style-src 'self'`) bloqueia. Com `<link>` a CSP continua restritiva, sem `'unsafe-inline'`, tanto em dev quanto no app instalado. Feito pela Pessoa 3 na base visual da interface (PR #6). |
