@@ -1,0 +1,93 @@
+/* Estrutura da janela: menu lateral fixo + área de conteúdo com rolagem própria. */
+.layout {
+  display: grid;
+  grid-template-columns: var(--largura-menu) 1fr;
+  height: 100vh;
+}
+
+.menu-lateral {
+  display: flex;
+  flex-direction: column;
+  background: var(--cor-primaria);
+  color: var(--cor-primaria-texto);
+  overflow-y: auto;
+}
+
+.menu-lateral__marca {
+  padding: var(--espaco-4) var(--espaco-3);
+  font-weight: 700;
+  font-size: 1.05rem;
+  border-bottom: 1px solid rgb(255 255 255 / 15%);
+}
+
+.menu-lateral__lista {
+  list-style: none;
+  margin: 0;
+  padding: var(--espaco-2) 0;
+  flex: 1;
+}
+
+.menu-lateral__link {
+  display: block;
+  padding: var(--espaco-2) var(--espaco-3);
+  color: var(--cor-primaria-texto);
+  text-decoration: none;
+  border-left: 4px solid transparent;
+}
+
+.menu-lateral__link:hover {
+  background: var(--cor-primaria-hover);
+}
+
+/* Item ativo: borda + negrito, e não só cor (acessibilidade). */
+.menu-lateral__link[aria-current='page'] {
+  background: var(--cor-primaria-hover);
+  border-left-color: var(--cor-destaque);
+  font-weight: 700;
+}
+
+.menu-lateral__link:focus-visible {
+  outline-offset: -3px;
+}
+
+.menu-lateral__rodape {
+  padding: var(--espaco-3);
+  font-size: 0.8rem;
+  opacity: 0.85;
+  border-top: 1px solid rgb(255 255 255 / 15%);
+}
+
+.conteudo {
+  overflow-y: auto;
+  padding: var(--espaco-5);
+}
+
+.conteudo:focus {
+  outline: none;
+}
+
+.cabecalho-tela {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-3);
+  margin-bottom: var(--espaco-4);
+}
+
+.cabecalho-tela h1 {
+  margin: 0;
+}
+
+.cabecalho-tela h1:focus {
+  outline: none;
+}
+
+.cabecalho-tela__acoes {
+  display: flex;
+  gap: var(--espaco-2);
+}
+
+.cabecalho-tela__detalhe {
+  margin: 0;
+  color: var(--cor-texto-suave);
+}
