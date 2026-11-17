@@ -2,6 +2,7 @@ import { Layout, type ItemMenu } from './components/Layout';
 import { NOME_APP, Roteador } from './nucleo/Roteador';
 import type { DefinicaoRota } from './util/rotas';
 import type { Tela } from './nucleo/Tela';
+import { CategoriasTela } from './pages/categorias/CategoriasTela';
 import { EmConstrucaoTela } from './pages/EmConstrucaoTela';
 import { InicioTela } from './pages/InicioTela';
 
@@ -25,9 +26,17 @@ const emConstrucao = (caminho: string): DefinicaoRota<Tela> => {
   return { caminho, criar: () => new EmConstrucaoTela(titulo) };
 };
 
-const ROTAS: readonly DefinicaoRota<Tela>[] = [
+/** Telas já construídas. */
+const TELAS: readonly DefinicaoRota<Tela>[] = [
   { caminho: '/', criar: () => new InicioTela() },
-  ...MENU.filter((item) => item.caminho !== '/').map((item) => emConstrucao(item.caminho))
+  { caminho: '/categorias', criar: () => new CategoriasTela() }
+];
+
+const ROTAS: readonly DefinicaoRota<Tela>[] = [
+  ...TELAS,
+  ...MENU.filter((item) => !TELAS.some((t) => t.caminho === item.caminho)).map((item) =>
+    emConstrucao(item.caminho)
+  )
 ];
 
 /** Monta a janela: layout com menu + roteador desenhando as telas no conteúdo. */
