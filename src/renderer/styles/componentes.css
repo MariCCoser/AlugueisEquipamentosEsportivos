@@ -111,6 +111,13 @@
   margin-left: var(--espaco-1);
 }
 
+/* Segunda linha menor dentro da célula (ex.: descrição embaixo do nome). */
+.tabela__detalhe {
+  display: block;
+  color: var(--cor-texto-suave);
+  font-size: 0.85rem;
+}
+
 .tabela__ordenar {
   background: none;
   border: none;
@@ -471,4 +478,98 @@ a.cartao-numero:hover {
 
 .rodape-tela a {
   color: var(--cor-texto-suave);
+}
+
+/* ---------- Paginação embaixo das listas ---------- */
+.paginacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-3);
+  margin-top: var(--espaco-3);
+  color: var(--cor-texto-suave);
+  font-size: 0.9rem;
+}
+
+.paginacao__resumo {
+  margin: 0;
+}
+
+.paginacao__botoes {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+}
+
+/* ---------- Formulário em duas colunas (vira uma coluna em janela estreita) ---------- */
+.grade-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  column-gap: var(--espaco-3);
+}
+
+.grade-2 > [hidden] {
+  display: none;
+}
+
+/* Grupo de campos com título (fieldset/legend: leitores de tela anunciam o grupo). */
+.grupo-campos {
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--espaco-3);
+}
+
+.grupo-campos legend {
+  font-weight: 700;
+  color: var(--cor-primaria);
+  margin-bottom: var(--espaco-2);
+}
+
+/* Bairro e cidade largos, UF estreita. */
+.grade-endereco {
+  display: grid;
+  grid-template-columns: 1fr 1fr 90px;
+  column-gap: var(--espaco-3);
+}
+
+/* Mensagem da busca de CEP, ao lado do campo. */
+.aviso-cep {
+  align-self: center;
+  margin: 0;
+  color: var(--cor-sucesso);
+  font-size: 0.9rem;
+}
+
+/* ---------- Detalhes (histórico do cliente) ---------- */
+.cartao__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-3);
+  margin-bottom: var(--espaco-3);
+}
+
+.cartao__topo h2 {
+  margin: 0;
+}
+
+.dados {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--espaco-2) var(--espaco-4);
+  margin: 0;
+}
+
+.dados dt {
+  font-weight: 600;
+  color: var(--cor-texto-suave);
+}
+
+.dados dd {
+  margin: 0;
+}
+
+.secao {
+  margin-bottom: var(--espaco-5);
 }
