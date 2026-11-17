@@ -1,0 +1,56 @@
+import { el } from '../nucleo/dom';
+import { itemMenuAtivo } from '../util/rotas';
+
+export interface ItemMenu {
+  caminho: string;
+  rotulo: string;
+}
+
+/**
+ * Estrutura fixa da janela: menu lateral à esquerda e área de conteúdo à direita.
+ * O Roteador desenha as telas dentro de `conteudo`.
+ */
+export class Layout {
+  readonly elemento: HTMLElement;
+  readonly conteudo: HTMLElement;
+  private readonly links: { caminho: string; link: HTMLAnchorElement }[] = [];
+
+  constructor(itens: readonly ItemMenu[], nomeApp: string, rodape: string) {
+    const lista = el('ul', { classe: 'menu-lateral__lista' });
+    for (const item of itens) {
+      const link = el('a', {
+        classe: 'menu-lateral__link',
+        texto: item.rotulo,
+        atributos: { href: '#' + item.caminho }
+      });
+      this.links.push({ caminho: item.caminho, link });
+      lista.append(el('li', {}, [link]));
+    }
+
+    const menu = el(
+      'nav',
+      { classe: 'menu-lateral', atributos: { 'aria-label': 'Menu principal' } },
+      [
+        el('div', { classe: 'menu-lateral__marca', texto: nomeApp }),
+        lista,
+        el('div', { classe: 'menu-lateral__rodape', texto: rodape })
+      ]
+    );
+
+    this.conteudo = el('main', { classe: 'conteudo', atributos: { id: 'conteudo', tabindex: -1 } });
+    this.elemento = el('div', { classe: 'layout' }, [menu, this.conteudo]);
+  }
+
+  /** Destaca no menu o item da tela atual (aria-current lido por leitores de tela). */
+  marcarAtivo(caminhoAtual: string): void {
+    for (const { caminho, link } of this.links) {
+      if (itemMenuAtivo(caminho, caminhoAtual)) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    }
+  }
+
+  atualizarRodape(texto: string): void {
+    const rodape = this.elemento.querySelector('.menu-lateral__rodape');
+    if (rodape) rodape.textContent = texto;
+  }
+}
