@@ -7,7 +7,15 @@
       content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Aluguel de Equipamentos Esportivos</title>
+    <title>Locadora Esportiva</title>
+    <!--
+      Estilos via <link> (e não "import './x.css'" no main.ts): em modo dev o Vite
+      injeta CSS importado como <style> inline, que a CSP (style-src 'self') bloqueia.
+      Com <link>, a CSP continua restritiva em dev e no app instalado.
+    -->
+    <link rel="stylesheet" href="./styles/tema.css" />
+    <link rel="stylesheet" href="./styles/layout.css" />
+    <link rel="stylesheet" href="./styles/componentes.css" />
   </head>
   <body>
     <div id="app"></div>
