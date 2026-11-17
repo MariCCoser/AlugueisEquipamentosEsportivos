@@ -23,6 +23,21 @@ export function formatarData(iso: string): string {
   return `${dia}/${mes}/${ano}`;
 }
 
+/**
+ * '11987654321' → '(11) 98765-4321' e '1133334444' → '(11) 3333-4444'.
+ * Com menos dígitos formata o que houver (serve de máscara enquanto a pessoa digita).
+ */
+export function formatarTelefone(telefone: string): string {
+  const d = telefone.replace(/\D/g, '').slice(0, 11);
+  if (d.length <= 2) return d ? `(${d}` : '';
+  const ddd = `(${d.slice(0, 2)}) `;
+  const numero = d.slice(2);
+  const corte = numero.length === 9 ? 5 : 4; // celular tem 9 dígitos depois do DDD
+  return numero.length > corte
+    ? `${ddd}${numero.slice(0, corte)}-${numero.slice(corte)}`
+    : ddd + numero;
+}
+
 /** 3 → '3 itens', 1 → '1 item'. */
 export function pluralizar(quantidade: number, singular: string, plural: string): string {
   return `${quantidade} ${quantidade === 1 ? singular : plural}`;

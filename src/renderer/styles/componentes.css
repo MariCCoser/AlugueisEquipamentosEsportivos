@@ -47,13 +47,21 @@
 }
 
 /* ---------- Tabela ---------- */
+.tabela-rolagem {
+  overflow-x: auto;
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+}
+
+.tabela td.sem-quebra,
+.tabela th.sem-quebra {
+  white-space: nowrap;
+}
+
 .tabela {
   width: 100%;
   border-collapse: collapse;
   background: var(--cor-superficie);
-  border-radius: var(--raio);
-  box-shadow: var(--sombra);
-  overflow: hidden;
 }
 
 .tabela caption {
@@ -91,6 +99,12 @@
 .tabela td.acoes {
   text-align: right;
   white-space: nowrap;
+}
+
+/* Botões das linhas menores, para a tabela caber sem rolagem na janela padrão. */
+.tabela td.acoes .botao {
+  padding: 2px var(--espaco-2);
+  font-size: 0.875rem;
 }
 
 .tabela td.acoes .botao + .botao {
@@ -223,6 +237,20 @@ th[aria-sort='descending'] .tabela__ordenar::after {
 .campo--checkbox .campo__ajuda,
 .campo--checkbox .campo__erro {
   grid-column: 2;
+}
+
+/* ---------- Barra de filtros acima das listas ---------- */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--espaco-3);
+  margin-bottom: var(--espaco-2);
+}
+
+.campo--busca {
+  flex: 1;
+  max-width: 420px;
 }
 
 /* ---------- Abas ---------- */
