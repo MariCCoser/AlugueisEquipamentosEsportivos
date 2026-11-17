@@ -70,7 +70,7 @@ export class DashboardTela implements Tela {
         titulo: 'Em manutenção',
         valor: r.equipamentosEmManutencao,
         detalhe: 'equipamento(s)',
-        link: '/manutencoes'
+        link: '/equipamentos?status=EM_MANUTENCAO'
       }),
       cartaoNumero({
         titulo: 'Multas em aberto',
