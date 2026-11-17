@@ -1,5 +1,6 @@
 import type { ApiExposta } from '@shared/api';
-import type { Resposta } from '@shared/dto/resposta';
+import type { ErroDTO, Resposta } from '@shared/dto/resposta';
+import { simularCategorias } from './simulacoes/categorias';
 
 /**
  * window.api FALSO, usado só em desenvolvimento quando a tela é aberta
@@ -9,9 +10,18 @@ import type { Resposta } from '@shared/dto/resposta';
  * Nunca entra no app instalado: o main.ts só importa este arquivo quando
  * `import.meta.env.DEV` é verdadeiro e o preload não existe.
  *
- * Para simular um domínio, acrescente-o em `respostas` com dados fixos.
+ * Para simular um domínio, acrescente-o em `respostas`. Para simular um erro,
+ * a função lança `new ErroSimulado({ codigo, mensagem, campos })`.
  */
-const respostas: Partial<Record<string, Record<string, (...args: unknown[]) => unknown>>> = {
+export type Simulacao = Record<string, (...args: never[]) => unknown>;
+
+export class ErroSimulado extends Error {
+  constructor(readonly erro: ErroDTO) {
+    super(erro.mensagem);
+  }
+}
+
+const respostas: Partial<Record<string, Simulacao>> = {
   app: {
     info: () => ({
       nome: 'Locadora Esportiva',
@@ -29,7 +39,8 @@ const respostas: Partial<Record<string, Record<string, (...args: unknown[]) => u
         { tabela: 'reservas', registros: 4 }
       ]
     })
-  }
+  },
+  categorias: simularCategorias()
 };
 
 function naoSimulado<T>(dominio: string, metodo: string): Resposta<T> {
@@ -51,10 +62,17 @@ export function criarApiSimulada(): ApiExposta {
         {
           get:
             (_a, metodo: string) =>
-            async (...args: unknown[]) => {
+            async (...args: never[]): Promise<Resposta<unknown>> => {
               await new Promise((r) => setTimeout(r, 300)); // simula a ida e volta do IPC
               const simular = respostas[dominio]?.[metodo];
-              return simular ? { ok: true, dados: simular(...args) } : naoSimulado(dominio, metodo);
+              if (!simular) return naoSimulado(dominio, metodo);
+              try {
+                // structuredClone imita o IPC: a tela recebe uma cópia, nunca o objeto guardado.
+                return { ok: true, dados: structuredClone(simular(...args)) };
+              } catch (erro) {
+                if (erro instanceof ErroSimulado) return { ok: false, erro: erro.erro };
+                throw erro;
+              }
             }
         }
       )
