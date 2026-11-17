@@ -5,14 +5,9 @@ import { aplicarErros, CampoSelect, CampoTexto } from '../../components/Campos';
 import { Modal } from '../../components/Modal';
 import { Toast } from '../../components/Toast';
 import { botao, el, novoId } from '../../nucleo/dom';
+import { hojeISO } from '../../util/datas';
+import { lerDinheiro } from '../../util/dinheiro';
 import { ROTULOS_ESTADO_CONSERVACAO, opcoesDe } from '../../util/rotulos';
-
-/** Data de hoje no formato do <input type="date">, no fuso do computador. */
-function hojeISO(): string {
-  const agora = new Date();
-  const doisDigitos = (n: number) => String(n).padStart(2, '0');
-  return `${agora.getFullYear()}-${doisDigitos(agora.getMonth() + 1)}-${doisDigitos(agora.getDate())}`;
-}
 
 /**
  * Modal de cadastro/edição de equipamento do inventário.
@@ -198,17 +193,6 @@ export class EquipamentoFormulario {
     this.precoVenda.elemento.hidden = locacao;
   }
 
-  /** Lê um valor em reais; devolve a mensagem de erro se não for um número positivo com até 2 casas. */
-  private static lerDinheiro(texto: string): { valor?: number; erro?: string } {
-    if (!texto.trim()) return { erro: 'Informe um valor maior que zero.' };
-    const valor = Number(texto.replace(',', '.'));
-    if (!Number.isFinite(valor) || valor <= 0) return { erro: 'Informe um valor maior que zero.' };
-    if (Math.abs(valor * 100 - Math.round(valor * 100)) > 1e-6) {
-      return { erro: 'Use no máximo 2 casas decimais.' };
-    }
-    return { valor };
-  }
-
   private async enviar(): Promise<void> {
     const erros: Record<string, string> = {};
     const nome = this.nome.valor.trim();
@@ -217,7 +201,7 @@ export class EquipamentoFormulario {
 
     const modalidade = this.modalidade.valor as Modalidade;
     const campoPreco = modalidade === 'LOCACAO' ? this.valorDiaria : this.precoVenda;
-    const preco = EquipamentoFormulario.lerDinheiro(campoPreco.valor);
+    const preco = lerDinheiro(campoPreco.valor);
     if (preco.erro) erros[campoPreco.nome] = preco.erro;
 
     const data = this.dataAquisicao.valor;
