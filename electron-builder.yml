@@ -1,0 +1,54 @@
+# Instalador do Windows (Pessoa 4). Gerar com: npm run dist
+# Resultado em release/<versão>/ ("Locadora Esportiva Setup x.y.z.exe").
+# Guia completo: docs/INSTALACAO.md
+
+appId: br.edu.dad.locadoraesportiva
+productName: Locadora Esportiva
+copyright: Grupo DAD — Projeto Final
+
+directories:
+  output: release/${version}
+  buildResources: build
+
+# Só o código já compilado entra no pacote. O .env (senha do banco, chave da API)
+# NUNCA vai junto: cada instalação tem o seu, fora do pacote (ver docs/INSTALACAO.md).
+files:
+  - out/**/*
+  - package.json
+  - '!**/*.map'
+
+# Modelo de configuração (sem segredos), copiado para a pasta do programa
+# para a pessoa saber o que preencher.
+# (o filtro explícito é necessário: arquivos que começam com ponto ficam de fora por padrão)
+extraResources:
+  - from: .
+    to: .
+    filter:
+      - .env.example
+
+# Empacota o código num arquivo .asar (não fica solto em pastas para alguém editar).
+asar: true
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  # Sem certificado de assinatura de código: o Windows SmartScreen avisa na primeira
+  # execução ("Mais informações" → "Executar assim mesmo"). Limitação aceita no projeto.
+  signAndEditExecutable: true
+
+nsis:
+  # Instalador com telas (não "um clique"): a pessoa vê e escolhe a pasta.
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Locadora Esportiva
+  # Desinstalar NÃO apaga a pasta de dados (onde fica o .env da loja).
+  deleteAppDataOnUninstall: false
+  language: '1046' # português do Brasil
+  artifactName: ${productName} Setup ${version}.${ext}
+
+# Atualização automática desligada: o app não baixa nem executa nada da internet sozinho.
+publish: null
