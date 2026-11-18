@@ -38,7 +38,18 @@ export class Layout {
     );
 
     this.conteudo = el('main', { classe: 'conteudo', atributos: { id: 'conteudo', tabindex: -1 } });
-    this.elemento = el('div', { classe: 'layout' }, [menu, this.conteudo]);
+    // Primeiro item do Tab: quem usa teclado não precisa passar pelos 10 itens do menu.
+    // Não usa href="#conteudo" porque o roteador trataria isso como uma rota.
+    const pular = el('a', {
+      classe: 'pular-para-conteudo',
+      texto: 'Pular para o conteúdo',
+      atributos: { href: '#conteudo' },
+      aoClicar: (evento) => {
+        evento.preventDefault();
+        this.conteudo.focus();
+      }
+    });
+    this.elemento = el('div', { classe: 'layout' }, [pular, menu, this.conteudo]);
   }
 
   /** Destaca no menu o item da tela atual (aria-current lido por leitores de tela). */
