@@ -3,8 +3,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--espaco-2);
+  min-height: 32px; /* área de clique confortável (WCAG 2.5.8 pede 24px) */
   padding: var(--espaco-2) var(--espaco-3);
-  border: 1px solid var(--cor-borda);
+  border: 1px solid var(--cor-borda-campo);
   border-radius: var(--raio);
   background: var(--cor-superficie);
   color: var(--cor-texto);
@@ -103,6 +104,7 @@
 
 /* Botões das linhas menores, para a tabela caber sem rolagem na janela padrão. */
 .tabela td.acoes .botao {
+  min-height: 28px;
   padding: 2px var(--espaco-2);
   font-size: 0.875rem;
 }
@@ -121,6 +123,7 @@
 .tabela__ordenar {
   background: none;
   border: none;
+  min-height: 28px; /* alvo de clique do cabeçalho ordenável */
   padding: 0;
   font: inherit;
   color: inherit;
@@ -199,7 +202,7 @@ th[aria-sort='descending'] .tabela__ordenar::after {
 .campo select,
 .campo textarea {
   padding: var(--espaco-2);
-  border: 1px solid var(--cor-borda);
+  border: 1px solid var(--cor-borda-campo);
   border-radius: var(--raio);
   font: inherit;
   background: var(--cor-superficie);
