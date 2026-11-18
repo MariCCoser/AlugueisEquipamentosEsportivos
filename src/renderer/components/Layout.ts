@@ -14,6 +14,11 @@ export class Layout {
   readonly elemento: HTMLElement;
   readonly conteudo: HTMLElement;
   private readonly links: { caminho: string; link: HTMLAnchorElement }[] = [];
+  /** Quem está logado + botões "Trocar senha" e "Sair" (preenchido por `mostrarUsuario`). */
+  private readonly areaUsuario = el('div', {
+    classe: 'menu-lateral__usuario',
+    atributos: { hidden: true }
+  });
 
   constructor(itens: readonly ItemMenu[], nomeApp: string, rodape: string) {
     const lista = el('ul', { classe: 'menu-lateral__lista' });
@@ -33,6 +38,7 @@ export class Layout {
       [
         el('div', { classe: 'menu-lateral__marca', texto: nomeApp }),
         lista,
+        this.areaUsuario,
         el('div', { classe: 'menu-lateral__rodape', texto: rodape })
       ]
     );
@@ -58,6 +64,19 @@ export class Layout {
       if (itemMenuAtivo(caminho, caminhoAtual)) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
     }
+  }
+
+  /** Mostra quem está logado e as ações da conta no pé do menu. */
+  mostrarUsuario(nome: string, perfil: string, acoes: HTMLElement[]): void {
+    this.areaUsuario.replaceChildren(
+      el('p', { classe: 'menu-lateral__nome' }, [
+        el('span', { classe: 'sr-only', texto: 'Conectado como ' }),
+        nome
+      ]),
+      el('p', { classe: 'menu-lateral__perfil', texto: perfil }),
+      el('div', { classe: 'menu-lateral__acoes' }, acoes)
+    );
+    this.areaUsuario.hidden = false;
   }
 
   atualizarRodape(texto: string): void {

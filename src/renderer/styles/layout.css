@@ -131,3 +131,103 @@
     flex-wrap: wrap;
   }
 }
+
+/* ---------- Quem está logado (pé do menu) ---------- */
+.menu-lateral__usuario {
+  padding: var(--espaco-3);
+  border-top: 1px solid rgb(255 255 255 / 15%);
+}
+
+.menu-lateral__nome {
+  margin: 0;
+  font-weight: 700;
+}
+
+.menu-lateral__perfil {
+  margin: 0 0 var(--espaco-2);
+  font-size: 0.85rem;
+}
+
+.menu-lateral__acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-2);
+}
+
+/* Botões claros sobre o azul do menu (contorno branco: 9,5:1). */
+.menu-lateral__acoes .botao {
+  min-height: 28px;
+  padding: 2px var(--espaco-2);
+  font-size: 0.85rem;
+  background: transparent;
+  border-color: var(--cor-primaria-texto);
+  color: var(--cor-primaria-texto);
+}
+
+.menu-lateral__acoes .botao:hover {
+  background: var(--cor-primaria-hover);
+}
+
+.menu-lateral__acoes .botao:focus-visible {
+  outline-color: var(--cor-primaria-texto);
+}
+
+/* ---------- Tela de login ---------- */
+.login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--espaco-4);
+  background: var(--cor-primaria);
+}
+
+.login__cartao {
+  width: min(400px, 100%);
+  padding: var(--espaco-5);
+  background: var(--cor-superficie);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-elevada);
+}
+
+.login__cartao h1:focus {
+  outline: none;
+}
+
+.login__marca {
+  margin: 0 0 var(--espaco-1);
+  color: var(--cor-primaria);
+  font-weight: 700;
+}
+
+.login__mensagem {
+  padding: var(--espaco-2) var(--espaco-3);
+  border-radius: var(--raio);
+  font-weight: 600;
+}
+
+.login__mensagem--erro {
+  background: var(--cor-erro-fundo);
+  color: var(--cor-erro);
+}
+
+.login__mensagem--info {
+  background: var(--cor-info-fundo);
+  color: var(--cor-info);
+}
+
+.login__mostrar {
+  align-self: flex-start;
+}
+
+.login__caps {
+  margin: 0;
+  color: var(--cor-alerta);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.login__entrar {
+  width: 100%;
+  justify-content: center;
+  margin-top: var(--espaco-2);
+}
