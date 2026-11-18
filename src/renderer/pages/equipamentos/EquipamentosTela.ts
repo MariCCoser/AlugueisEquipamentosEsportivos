@@ -1,8 +1,10 @@
 import type { EquipamentoDTO, FiltroEquipamentoDTO } from '@shared/dto/equipamento.dto';
 import type { Paginado } from '@shared/dto/resposta';
 import {
+  ESTADOS_CONSERVACAO,
   MODALIDADES,
   STATUS_EQUIPAMENTO,
+  type EstadoConservacao,
   type Modalidade,
   type StatusEquipamento
 } from '@shared/models/enums';
@@ -34,8 +36,9 @@ function lerDaLista<T extends string>(valor: string | null, lista: readonly T[])
 }
 
 /**
- * Inventário: lista paginada pelo Main com filtros por nome, categoria, status e modalidade.
- * Os filtros podem vir no endereço: #/equipamentos?status=EM_MANUTENCAO&modalidade=LOCACAO
+ * Inventário: lista paginada pelo Main com filtros por nome, categoria, status, modalidade
+ * e estado de conservação. Os filtros podem vir no endereço:
+ * #/equipamentos?status=EM_MANUTENCAO&modalidade=LOCACAO&conservacao=REGULAR
  */
 export class EquipamentosTela implements Tela {
   readonly titulo = 'Inventário';
@@ -94,7 +97,8 @@ export class EquipamentosTela implements Tela {
     this.filtro = {
       pagina: 1,
       status: lerDaLista(consulta?.get('status') ?? null, STATUS_EQUIPAMENTO),
-      modalidade: lerDaLista(consulta?.get('modalidade') ?? null, MODALIDADES)
+      modalidade: lerDaLista(consulta?.get('modalidade') ?? null, MODALIDADES),
+      estadoConservacao: lerDaLista(consulta?.get('conservacao') ?? null, ESTADOS_CONSERVACAO)
     };
   }
 
@@ -140,6 +144,15 @@ export class EquipamentosTela implements Tela {
       valor: this.filtro.modalidade ?? '',
       aoMudar: (valor) => this.filtrar({ modalidade: (valor || undefined) as Modalidade })
     });
+    const conservacao = new CampoSelect({
+      nome: 'estadoConservacao',
+      rotulo: 'Conservação',
+      opcoes: opcoesDe(ROTULOS_ESTADO_CONSERVACAO),
+      opcaoVazia: 'Todas',
+      valor: this.filtro.estadoConservacao ?? '',
+      aoMudar: (valor) =>
+        this.filtrar({ estadoConservacao: (valor || undefined) as EstadoConservacao })
+    });
 
     // As categorias do filtro chegam depois; a lista já pode ir aparecendo.
     void window.api.categorias.listar().then((resposta) => {
@@ -160,7 +173,8 @@ export class EquipamentosTela implements Tela {
         busca.elemento,
         categoria.elemento,
         status.elemento,
-        modalidade.elemento
+        modalidade.elemento,
+        conservacao.elemento
       ]),
       area
     );
@@ -190,8 +204,8 @@ export class EquipamentosTela implements Tela {
   }
 
   private temFiltro(): boolean {
-    const { busca, categoriaId, status, modalidade } = this.filtro;
-    return Boolean(busca || categoriaId || status || modalidade);
+    const { busca, categoriaId, status, modalidade, estadoConservacao } = this.filtro;
+    return Boolean(busca || categoriaId || status || modalidade || estadoConservacao);
   }
 
   /** Mudou um filtro: volta para a primeira página. */
