@@ -1,5 +1,5 @@
 import type { IdDTO } from '@shared/dto';
-import type { UsuarioSessaoDTO } from '@shared/dto/auth.dto';
+import type { AlterarSenhaDTO, LoginDTO, UsuarioSessaoDTO } from '@shared/dto/auth.dto';
 import type {
   AtualizarUsuarioDTO,
   CriarUsuarioDTO,
@@ -8,16 +8,64 @@ import type {
 } from '@shared/dto/usuario.dto';
 import { ErroSimulado, type Simulacao } from '../apiSimulada';
 
-/** No modo simulado quem está "logado" é o administrador do seed. */
-const LOGADO: UsuarioSessaoDTO = {
-  id: 1,
-  nome: 'Administrador',
-  email: 'admin@aluguel.local',
-  perfil: 'ADMIN'
-};
+/**
+ * Logins de exemplo do modo simulado: os mesmos documentados no seed
+ * (src/main/database/seeds/README.md). Só existem no navegador de desenvolvimento.
+ */
+const CONTAS: { usuario: UsuarioSessaoDTO; senha: string }[] = [
+  {
+    usuario: { id: 1, nome: 'Administrador', email: 'admin@aluguel.local', perfil: 'ADMIN' },
+    senha: 'Admin@2026'
+  },
+  {
+    usuario: {
+      id: 2,
+      nome: 'Funcionária Exemplo',
+      email: 'funcionario@aluguel.local',
+      perfil: 'FUNCIONARIO'
+    },
+    senha: 'Func@2026'
+  }
+];
+
+/** Quem está "logado" no modo simulado (como a classe Sessao do Main). */
+let logado: UsuarioSessaoDTO | null = null;
 
 export function simularAuth(): Simulacao {
-  return { sessaoAtual: () => LOGADO };
+  return {
+    sessaoAtual: () => logado,
+    login: ({ email, senha }: LoginDTO) => {
+      const conta = CONTAS.find((c) => c.usuario.email === email.trim().toLowerCase());
+      // Mesma mensagem para e-mail inexistente e senha errada (não revela quem tem conta).
+      if (!conta || conta.senha !== senha) {
+        throw new ErroSimulado({
+          codigo: 'NAO_AUTORIZADO',
+          mensagem: 'E-mail ou senha incorretos.'
+        });
+      }
+      logado = { ...conta.usuario };
+      return logado;
+    },
+    logout: () => {
+      logado = null;
+    },
+    alterarSenha: ({ senhaAtual, novaSenha }: AlterarSenhaDTO) => {
+      const conta = CONTAS.find((c) => c.usuario.id === logado?.id);
+      if (!conta)
+        throw new ErroSimulado({
+          codigo: 'NAO_AUTORIZADO',
+          mensagem: 'Faça login para continuar.'
+        });
+      if (conta.senha !== senhaAtual) {
+        throw new ErroSimulado({
+          codigo: 'VALIDACAO',
+          mensagem: 'Dados inválidos. Confira os campos destacados.',
+          campos: { senhaAtual: 'Senha atual incorreta.' }
+        });
+      }
+      conta.senha = novaSenha;
+    }
+  };
 }
 
 /**
@@ -122,7 +170,7 @@ export function simularUsuarios(): Simulacao {
       const atual = obter(id);
       garantirEmailLivre(dados.email, id);
       if (
-        id === LOGADO.id &&
+        id === logado?.id &&
         (dados.ativo === false || (dados.perfil && dados.perfil !== 'ADMIN'))
       ) {
         throw new ErroSimulado({
