@@ -26,8 +26,10 @@ export class Roteador {
     private readonly aoMudarCaminho?: (caminho: string) => void
   ) {}
 
+  private readonly aoMudarHash = (): void => void this.renderizar();
+
   iniciar(): void {
-    window.addEventListener('hashchange', () => void this.renderizar());
+    window.addEventListener('hashchange', this.aoMudarHash);
     if (window.location.hash === '' || window.location.hash === '#') {
       window.location.replace('#/');
     }
@@ -68,6 +70,14 @@ export class Roteador {
     }
 
     if (numero === this.navegacao) this.focarTitulo(container);
+  }
+
+  /** Para de seguir o endereço e desmonta a tela atual (ex.: ao sair do sistema). */
+  parar(): void {
+    window.removeEventListener('hashchange', this.aoMudarHash);
+    this.navegacao++;
+    this.telaAtual?.desmontar?.();
+    this.telaAtual = null;
   }
 
   private focarTitulo(container: HTMLElement): void {
