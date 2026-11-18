@@ -1,4 +1,4 @@
-import { botao, el } from '../nucleo/dom';
+import { botao, el, novoId } from '../nucleo/dom';
 import { Modal } from './Modal';
 
 export interface OpcoesConfirmacao {
@@ -32,9 +32,12 @@ export function confirmar(opcoes: OpcoesConfirmacao): Promise<boolean> {
       opcoes.perigo === false ? 'primario' : 'perigo'
     );
 
+    // A pergunta é lida junto com o título quando o diálogo abre.
+    const idMensagem = novoId('confirmacao');
     const modal = new Modal({
       titulo: opcoes.titulo,
-      conteudo: [el('p', { texto: opcoes.mensagem })],
+      conteudo: [el('p', { texto: opcoes.mensagem, atributos: { id: idMensagem } })],
+      descritoPor: idMensagem,
       rodape: [cancelar, confirmarBotao],
       aoFechar: () => resolver(confirmado)
     });

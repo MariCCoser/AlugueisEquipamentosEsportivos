@@ -24,7 +24,8 @@ export function paginacao(
     atributos: { 'aria-live': 'polite' }
   });
 
-  if (info.totalPaginas <= 1) return el('nav', { classe: 'paginacao' }, [resumo]);
+  // Uma página só: não há para onde navegar, então não é um <nav> (evita região sem nome).
+  if (info.totalPaginas <= 1) return el('div', { classe: 'paginacao' }, [resumo]);
 
   const anterior = botao('‹ Anterior', () => irPara(dados.pagina - 1), 'padrao', {
     'aria-label': 'Página anterior'

@@ -5,7 +5,9 @@ type TipoToast = 'sucesso' | 'erro';
 /**
  * Avisos rápidos no canto da tela ("Categoria salva.", "Erro ao salvar.").
  * Ficam em regiões aria-live, então leitores de tela anunciam a mensagem.
- * Erros ficam mais tempo na tela e são anunciados com prioridade.
+ * Erros são anunciados com prioridade e ficam na tela até a pessoa fechar (WCAG 2.2.1:
+ * ninguém perde um erro por ler devagar). Avisos de sucesso somem sozinhos, mas o tempo
+ * para enquanto o mouse ou o foco estiverem sobre eles.
  */
 export class Toast {
   private static instancia: Toast | null = null;
@@ -30,10 +32,10 @@ export class Toast {
   }
 
   static erro(mensagem: string): void {
-    Toast.obter().mostrar('erro', mensagem, 7000);
+    Toast.obter().mostrar('erro', mensagem, null);
   }
 
-  private mostrar(tipo: TipoToast, mensagem: string, duracaoMs: number): void {
+  private mostrar(tipo: TipoToast, mensagem: string, duracaoMs: number | null): void {
     const regiao = tipo === 'erro' ? this.regiaoUrgente : this.regiaoEducada;
     const prefixo = tipo === 'erro' ? '✖ ' : '✔ ';
 
@@ -47,11 +49,22 @@ export class Toast {
       })
     ]);
 
-    const temporizador = window.setTimeout(() => remover(), duracaoMs);
+    let temporizador: number | undefined;
     const remover = (): void => {
       window.clearTimeout(temporizador);
       aviso.remove();
     };
+    if (duracaoMs !== null) {
+      const contar = (): void => {
+        temporizador = window.setTimeout(remover, duracaoMs);
+      };
+      const pausar = (): void => window.clearTimeout(temporizador);
+      aviso.addEventListener('mouseenter', pausar);
+      aviso.addEventListener('focusin', pausar);
+      aviso.addEventListener('mouseleave', contar);
+      aviso.addEventListener('focusout', contar);
+      contar();
+    }
 
     regiao.append(aviso);
   }
