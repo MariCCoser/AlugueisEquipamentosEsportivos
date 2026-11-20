@@ -15,27 +15,34 @@ import { diasEntre, hojeISO } from '../../util/datas';
 import { formatarData, formatarMoeda, pluralizar } from '../../util/formatadores';
 import { DevolucaoFormulario } from './DevolucaoFormulario';
 
-type Aba = 'pendentes' | 'ativas' | 'atrasadas';
-/** As três abas usam a mesma linha; só as atrasadas trazem atraso e multa prevista. */
+type Aba = 'pendentes' | 'ativas' | 'atrasadas' | 'devolvidas';
+/** As abas usam a mesma linha; só as atrasadas trazem atraso e multa prevista. */
 type Linha = ReservaResumoDTO & Partial<Pick<ReservaAtrasadaDTO, 'diasAtraso' | 'multaPrevista'>>;
 
 const ABAS: { id: Aba; rotulo: string }[] = [
   { id: 'pendentes', rotulo: 'Aguardando retirada' },
   { id: 'ativas', rotulo: 'Com o cliente' },
-  { id: 'atrasadas', rotulo: 'Atrasadas' }
+  { id: 'atrasadas', rotulo: 'Atrasadas' },
+  { id: 'devolvidas', rotulo: 'Devolvidas' }
 ];
 
 const TEXTO_VAZIO: Record<Aba, string> = {
   pendentes: 'Nenhuma reserva aguardando retirada.',
   ativas: 'Nenhum equipamento com clientes agora.',
-  atrasadas: 'Nenhuma devolução atrasada.'
+  atrasadas: 'Nenhuma devolução atrasada.',
+  devolvidas: 'Nenhuma reserva devolvida ainda.'
 };
 
+/** Quantas devolvidas a aba mostra (as mais recentes). */
+const LIMITE_DEVOLVIDAS = 100;
+
 /**
- * Painel de devoluções (#/devolucoes?aba=ativas), com três abas:
+ * Painel de devoluções (#/devolucoes?aba=ativas), com quatro abas:
  * - Aguardando retirada (PENDENTE): confirmar a retirada ou cancelar;
  * - Com o cliente (ATIVA): registrar a devolução ou mandar lembrete;
- * - Atrasadas: dias de atraso, multa se devolver hoje e a rota até o cliente (API 3).
+ * - Atrasadas: dias de atraso, multa se devolver hoje e a rota até o cliente (API 3);
+ * - Devolvidas (DEVOLVIDA): quando voltou, se voltou com atraso e se a caução ainda está
+ *   guardada (com botão para registrar que ela foi devolvida ao cliente).
  */
 export class DevolucoesTela implements Tela {
   readonly titulo = 'Devoluções';
@@ -79,6 +86,18 @@ export class DevolucoesTela implements Tela {
   private async buscar(): Promise<Resposta<Linha[]>> {
     if (this.aba === 'ativas') return window.api.reservas.listarAtivas();
     if (this.aba === 'atrasadas') return window.api.reservas.listarAtrasadas();
+    if (this.aba === 'devolvidas') {
+      const resposta = await window.api.reservas.listar({
+        status: 'DEVOLVIDA',
+        porPagina: LIMITE_DEVOLVIDAS
+      });
+      if (!resposta.ok) return resposta;
+      // As devoluções mais recentes primeiro.
+      const itens = [...resposta.dados.itens].sort((a, b) =>
+        (b.dataDevolucaoReal ?? '').localeCompare(a.dataDevolucaoReal ?? '')
+      );
+      return { ok: true, dados: itens };
+    }
     const resposta = await window.api.reservas.listar({ status: 'PENDENTE', porPagina: 100 });
     return resposta.ok ? { ok: true, dados: resposta.dados.itens } : resposta;
   }
@@ -115,6 +134,20 @@ export class DevolucoesTela implements Tela {
 
     if (this.aba === 'ativas') {
       colunas.push({ titulo: 'Situação', valor: (r) => DevolucoesTela.situacao(r) });
+    }
+    if (this.aba === 'devolvidas') {
+      colunas.splice(
+        3,
+        0,
+        {
+          titulo: 'Devolvida em',
+          valor: (r) => (r.dataDevolucaoReal ? formatarData(r.dataDevolucaoReal) : '—'),
+          semQuebra: true,
+          ordenar: (a, b) => (a.dataDevolucaoReal ?? '').localeCompare(b.dataDevolucaoReal ?? '')
+        },
+        { titulo: 'Situação', valor: (r) => DevolucoesTela.situacaoDevolvida(r) }
+      );
+      colunas.push({ titulo: 'Caução', valor: (r) => DevolucoesTela.caucao(r) });
     }
     if (this.aba === 'atrasadas') {
       colunas.push(
@@ -153,8 +186,33 @@ export class DevolucoesTela implements Tela {
     return etiqueta(`Faltam ${pluralizar(dias, 'dia', 'dias')}`, 'sucesso');
   }
 
+  /** Devolvida no prazo ou com quantos dias de atraso (a multa aparece em Pagamentos). */
+  private static situacaoDevolvida(r: Linha): HTMLElement {
+    const atraso = r.dataDevolucaoReal
+      ? diasEntre(r.dataDevolucaoPrevista, r.dataDevolucaoReal)
+      : 0;
+    return atraso > 0
+      ? etiqueta(`Com ${pluralizar(atraso, 'dia', 'dias')} de atraso`, 'alerta')
+      : etiqueta('No prazo', 'sucesso');
+  }
+
+  private static caucao(r: Linha): HTMLElement | string {
+    if (r.caucaoStatus === 'RETIDA') return etiqueta('Guardada', 'alerta');
+    if (r.caucaoStatus === 'DEVOLVIDA') return etiqueta('Devolvida', 'sucesso');
+    return '—';
+  }
+
   private acoes(r: Linha): HTMLElement[] {
     const rotulo = `da reserva #${r.id} de ${r.clienteNome}`;
+    if (this.aba === 'devolvidas') {
+      return r.caucaoStatus === 'RETIDA'
+        ? [
+            botao('Devolver caução', () => void this.devolverCaucao(r), 'padrao', {
+              'aria-label': `Registrar que a caução ${rotulo} foi devolvida`
+            })
+          ]
+        : [];
+    }
     if (this.aba === 'pendentes') {
       return [
         botao('Confirmar retirada', () => void this.confirmarRetirada(r), 'primario', {
@@ -184,6 +242,25 @@ export class DevolucoesTela implements Tela {
       );
     }
     return acoes;
+  }
+
+  /** Registra que a caução que ficou guardada foi devolvida ao cliente. */
+  private async devolverCaucao(r: Linha): Promise<void> {
+    const confirmado = await confirmar({
+      titulo: 'Devolver caução',
+      mensagem: `Confirmar que a caução da reserva #${r.id} (${formatarMoeda(r.valorCaucao)}, ou o que sobrou dela) foi devolvida a ${r.clienteNome}?`,
+      textoConfirmar: 'Sim, foi devolvida',
+      textoCancelar: 'Ainda não',
+      perigo: false
+    });
+    if (!confirmado) return;
+    const resposta = await window.api.pagamentos.devolverCaucao({ reservaId: r.id, reter: false });
+    if (resposta.ok) {
+      Toast.sucesso(`Caução da reserva #${r.id} marcada como devolvida.`);
+      this.recarregar();
+    } else {
+      Toast.erro(resposta.erro.mensagem);
+    }
   }
 
   private async confirmarRetirada(r: Linha): Promise<void> {
