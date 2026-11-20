@@ -3,8 +3,9 @@
   display: inline-flex;
   align-items: center;
   gap: var(--espaco-2);
+  min-height: 32px; /* área de clique confortável (WCAG 2.5.8 pede 24px) */
   padding: var(--espaco-2) var(--espaco-3);
-  border: 1px solid var(--cor-borda);
+  border: 1px solid var(--cor-borda-campo);
   border-radius: var(--raio);
   background: var(--cor-superficie);
   color: var(--cor-texto);
@@ -103,6 +104,7 @@
 
 /* Botões das linhas menores, para a tabela caber sem rolagem na janela padrão. */
 .tabela td.acoes .botao {
+  min-height: 28px;
   padding: 2px var(--espaco-2);
   font-size: 0.875rem;
 }
@@ -111,9 +113,17 @@
   margin-left: var(--espaco-1);
 }
 
+/* Segunda linha menor dentro da célula (ex.: descrição embaixo do nome). */
+.tabela__detalhe {
+  display: block;
+  color: var(--cor-texto-suave);
+  font-size: 0.85rem;
+}
+
 .tabela__ordenar {
   background: none;
   border: none;
+  min-height: 28px; /* alvo de clique do cabeçalho ordenável */
   padding: 0;
   font: inherit;
   color: inherit;
@@ -192,7 +202,7 @@ th[aria-sort='descending'] .tabela__ordenar::after {
 .campo select,
 .campo textarea {
   padding: var(--espaco-2);
-  border: 1px solid var(--cor-borda);
+  border: 1px solid var(--cor-borda-campo);
   border-radius: var(--raio);
   font: inherit;
   background: var(--cor-superficie);
@@ -409,4 +419,358 @@ th[aria-sort='descending'] .tabela__ordenar::after {
   box-shadow: var(--sombra);
   padding: var(--espaco-4);
   margin-bottom: var(--espaco-4);
+}
+
+/* ---------- Cartões de números (painel) ---------- */
+.cartoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--espaco-3);
+  margin-bottom: var(--espaco-5);
+}
+
+.cartao-numero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-1);
+  padding: var(--espaco-3) var(--espaco-4);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-top: 4px solid var(--cor-primaria);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+
+a.cartao-numero:hover {
+  border-color: var(--cor-primaria);
+}
+
+.cartao-numero--alerta {
+  border-top-color: var(--cor-erro);
+}
+
+.cartao-numero__titulo {
+  color: var(--cor-texto-suave);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.cartao-numero__valor {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap; /* "R$ 1.250,00" não quebra no meio */
+}
+
+.cartao-numero--alerta .cartao-numero__valor {
+  color: var(--cor-erro);
+}
+
+.cartao-numero__detalhe {
+  color: var(--cor-texto-suave);
+  font-size: 0.85rem;
+}
+
+.rodape-tela {
+  margin-top: var(--espaco-5);
+  font-size: 0.85rem;
+}
+
+.rodape-tela a {
+  color: var(--cor-texto-suave);
+}
+
+/* ---------- Paginação embaixo das listas ---------- */
+.paginacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-3);
+  margin-top: var(--espaco-3);
+  color: var(--cor-texto-suave);
+  font-size: 0.9rem;
+}
+
+.paginacao__resumo {
+  margin: 0;
+}
+
+.paginacao__botoes {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+}
+
+/* ---------- Formulário em duas colunas (vira uma coluna em janela estreita) ---------- */
+.grade-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  column-gap: var(--espaco-3);
+}
+
+.grade-2 > [hidden] {
+  display: none;
+}
+
+/* Grupo de campos com título (fieldset/legend: leitores de tela anunciam o grupo). */
+.grupo-campos {
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--espaco-3);
+}
+
+.grupo-campos legend {
+  font-weight: 700;
+  color: var(--cor-primaria);
+  margin-bottom: var(--espaco-2);
+}
+
+/* Bairro e cidade largos, UF estreita. */
+.grade-endereco {
+  display: grid;
+  grid-template-columns: 1fr 1fr 90px;
+  column-gap: var(--espaco-3);
+}
+
+/* Mensagem da busca de CEP, ao lado do campo. */
+.aviso-cep {
+  align-self: center;
+  margin: 0;
+  color: var(--cor-sucesso);
+  font-size: 0.9rem;
+}
+
+/* ---------- Detalhes (histórico do cliente) ---------- */
+.cartao__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-3);
+  margin-bottom: var(--espaco-3);
+}
+
+.cartao__topo h2 {
+  margin: 0;
+}
+
+.dados {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--espaco-2) var(--espaco-4);
+  margin: 0;
+}
+
+.dados dt {
+  font-weight: 600;
+  color: var(--cor-texto-suave);
+}
+
+.dados dd {
+  margin: 0;
+}
+
+.secao {
+  margin-bottom: var(--espaco-5);
+}
+
+/* Texto secundário dentro de parágrafos e cartões. */
+.texto-suave {
+  color: var(--cor-texto-suave);
+}
+
+/* ---------- Assistente (nova reserva) ---------- */
+.passos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-2) var(--espaco-4);
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--espaco-4);
+}
+
+.passos__passo {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  color: var(--cor-texto-suave);
+}
+
+.passos__numero {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid currentcolor;
+  font-weight: 700;
+}
+
+.passos__passo--atual {
+  color: var(--cor-primaria);
+  font-weight: 700;
+}
+
+.passos__passo--atual .passos__numero {
+  background: var(--cor-primaria);
+  border-color: var(--cor-primaria);
+  color: var(--cor-primaria-texto);
+}
+
+.passos__passo--feito {
+  color: var(--cor-sucesso);
+}
+
+.assistente__titulo {
+  margin-top: 0;
+}
+
+.assistente__escolhido {
+  margin: var(--espaco-3) 0;
+  font-weight: 600;
+}
+
+.assistente__rodape {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--espaco-3);
+  margin-top: var(--espaco-4);
+  padding-top: var(--espaco-3);
+  border-top: 1px solid var(--cor-borda);
+}
+
+.assistente__sucesso {
+  margin-top: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--cor-sucesso);
+}
+
+/* Lista de opções clicáveis (clientes, equipamentos). */
+.lista-escolha {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--espaco-2);
+}
+
+.lista-escolha--grade {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.lista-escolha__opcao {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espaco-2);
+  width: 100%;
+  padding: var(--espaco-2) var(--espaco-3);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.lista-escolha__opcao {
+  flex-direction: column;
+  gap: 0;
+}
+
+.lista-escolha__opcao:hover {
+  border-color: var(--cor-primaria);
+}
+
+.lista-escolha__opcao[aria-pressed='true'],
+.lista-escolha__opcao:has(input:checked) {
+  border: 2px solid var(--cor-primaria);
+  background: var(--cor-info-fundo);
+}
+
+.lista-escolha__opcao input {
+  margin-top: 4px;
+}
+
+.lista-escolha__opcao .etiqueta {
+  margin-top: var(--espaco-1);
+}
+
+/* Botão ao lado de campos na barra de filtros: alinha com a caixa, não com o rótulo. */
+.filtros > .botao {
+  margin-bottom: var(--espaco-3);
+}
+
+.tabela tfoot th,
+.tabela tfoot td {
+  font-weight: 700;
+  background: var(--cor-superficie-suave);
+  border-top: 2px solid var(--cor-borda);
+}
+
+/* ---------- Previsão do tempo (reserva) ---------- */
+.cartao-clima {
+  border-left: 5px solid var(--cor-info);
+}
+
+.cartao-clima h3 {
+  margin-top: 0;
+}
+
+.cartao-clima__resumo {
+  font-weight: 600;
+}
+
+.cartao-clima__dados {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--espaco-1) var(--espaco-3);
+}
+
+.cartao-clima__dados dd {
+  margin: 0;
+}
+
+.cartao-clima__alerta {
+  margin-bottom: 0;
+  padding: var(--espaco-2) var(--espaco-3);
+  border-radius: var(--raio);
+  background: var(--cor-alerta-fundo);
+  color: var(--cor-alerta);
+  font-weight: 600;
+}
+
+/* ---------- Devolução ---------- */
+.aviso-multa {
+  margin-bottom: var(--espaco-3);
+  padding: var(--espaco-2) var(--espaco-3);
+  border-radius: var(--raio);
+  background: var(--cor-sucesso-fundo);
+  color: var(--cor-sucesso);
+  font-weight: 600;
+}
+
+.aviso-multa:empty {
+  display: none;
+}
+
+.aviso-multa--atraso {
+  background: var(--cor-erro-fundo);
+  color: var(--cor-erro);
+}
+
+.total-lista {
+  margin-top: var(--espaco-3);
+  font-weight: 600;
+}
+
+/* Campo de valor curto (caução, custo): não precisa ocupar a linha toda. */
+.campo--curto {
+  max-width: 240px;
 }

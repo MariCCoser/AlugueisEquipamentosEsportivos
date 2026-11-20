@@ -7,6 +7,7 @@ import { NotificacaoClient } from './integrations/NotificacaoClient';
 import { registrarAppIpc, type DependenciasApp } from './ipc/app.ipc';
 import { registrarCategoriasIpc } from './ipc/categorias.ipc';
 import { registrarClientesIpc } from './ipc/clientes.ipc';
+import { registrarDashboardIpc } from './ipc/dashboard.ipc';
 import { registrarEquipamentosIpc } from './ipc/equipamentos.ipc';
 import { registrarFinanceiroIpc } from './ipc/financeiro.ipc';
 import { registrarFornecedoresIpc } from './ipc/fornecedores.ipc';
@@ -17,6 +18,8 @@ import { registrarReservasIpc } from './ipc/reservas.ipc';
 import { criarRepositorios } from './repositories';
 import { CalendarioISO } from './domain/CalendarioISO';
 import { CategoriaService } from './services/CategoriaService';
+import { DashboardRepository } from './repositories/DashboardRepository';
+import { DashboardService } from './services/DashboardService';
 import { ClienteService } from './services/ClienteService';
 import { DisponibilidadeService } from './services/DisponibilidadeService';
 import { EquipamentoService } from './services/EquipamentoService';
@@ -116,6 +119,7 @@ class Aplicacao {
       new HistoricoClienteService(dados)
     );
     registrarCategoriasIpc(registro, new CategoriaService(repos.categorias));
+    registrarDashboardIpc(registro, new DashboardService(new DashboardRepository(db), hoje));
     registrarFornecedoresIpc(registro, new FornecedorService(repos.fornecedores));
     registrarEquipamentosIpc(
       registro,

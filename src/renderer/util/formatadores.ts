@@ -38,6 +38,12 @@ export function formatarTelefone(telefone: string): string {
     : ddd + numero;
 }
 
+/** '01310100' → '01310-100'. Com menos dígitos formata o que houver (máscara). */
+export function formatarCep(cep: string): string {
+  const d = cep.replace(/\D/g, '').slice(0, 8);
+  return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+}
+
 /** 3 → '3 itens', 1 → '1 item'. */
 export function pluralizar(quantidade: number, singular: string, plural: string): string {
   return `${quantidade} ${quantidade === 1 ? singular : plural}`;

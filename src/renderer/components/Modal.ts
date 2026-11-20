@@ -6,6 +6,8 @@ export interface OpcoesModal {
   rodape?: Filho[];
   /** Chamado sempre que o modal fecha (botão ×, Esc ou `fechar()`). */
   aoFechar?: () => void;
+  /** Id do texto que explica o modal (lido junto com o título ao abrir). */
+  descritoPor?: string;
 }
 
 /**
@@ -20,19 +22,26 @@ export class Modal {
   constructor(private readonly opcoes: OpcoesModal) {
     const idTitulo = novoId('modal-titulo');
 
-    this.dialogo = el('dialog', { classe: 'modal', atributos: { 'aria-labelledby': idTitulo } }, [
-      el('header', { classe: 'modal__cabecalho' }, [
-        el('h2', { texto: opcoes.titulo, atributos: { id: idTitulo } }),
-        el('button', {
-          classe: 'modal__fechar',
-          texto: '×',
-          atributos: { type: 'button', 'aria-label': 'Fechar' },
-          aoClicar: () => this.fechar()
-        })
-      ]),
-      el('div', { classe: 'modal__corpo' }, opcoes.conteudo),
-      opcoes.rodape ? el('footer', { classe: 'modal__rodape' }, opcoes.rodape) : null
-    ]);
+    this.dialogo = el(
+      'dialog',
+      {
+        classe: 'modal',
+        atributos: { 'aria-labelledby': idTitulo, 'aria-describedby': opcoes.descritoPor }
+      },
+      [
+        el('header', { classe: 'modal__cabecalho' }, [
+          el('h2', { texto: opcoes.titulo, atributos: { id: idTitulo } }),
+          el('button', {
+            classe: 'modal__fechar',
+            texto: '×',
+            atributos: { type: 'button', 'aria-label': 'Fechar' },
+            aoClicar: () => this.fechar()
+          })
+        ]),
+        el('div', { classe: 'modal__corpo' }, opcoes.conteudo),
+        opcoes.rodape ? el('footer', { classe: 'modal__rodape' }, opcoes.rodape) : null
+      ]
+    );
 
     // Esc dispara "close"; centralizamos a limpeza aqui.
     this.dialogo.addEventListener('close', () => this.aoFecharDialogo());
