@@ -14,5 +14,8 @@ Peças de interface usadas por várias telas. Todas inserem texto com `textConte
 | `ConfirmDialog.ts` | `confirmar(...)` antes de excluir; foco inicial em "Cancelar"                           |
 | `Toast.ts`         | Avisos rápidos (`Toast.sucesso`, `Toast.erro`) em região `aria-live`                    |
 | `Abas.ts`          | Abas acessíveis (setas, Home/End) — Fornecedores e Devoluções                           |
+| `Paginacao.ts`     | Barra "Mostrando 21–40 de 45" com Anterior/Próxima para listas paginadas pelo Main      |
+| `Etiqueta.ts`      | Etiqueta colorida de status, sempre com texto (a cor sozinha não informa)               |
+| `CartaoNumero.ts`  | Cartão com um número grande (painel e histórico do cliente); pode ser um link           |
 
 **Responsável:** Pessoa 4
