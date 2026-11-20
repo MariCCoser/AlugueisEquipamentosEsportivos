@@ -3,6 +3,7 @@ import { TODOS_OS_CANAIS, type CanalIpc } from '@shared/ipc-channels';
 import { falha, type Resposta } from '@shared/dto/resposta';
 import type { Perfil } from '@shared/models/enums';
 import { ErroApp } from '../errors/ErroApp';
+import { LogSeguro } from '../security/LogSeguro';
 import { PERMISSOES } from './permissoes';
 
 /**
@@ -96,8 +97,8 @@ export class RegistroIpc {
     } catch (erro) {
       // Erro esperado (validação, não encontrado, regra...): a mensagem já é amigável.
       if (erro instanceof ErroApp) return falha(erro.codigo, erro.message, erro.campos);
-      // O detalhe vai só para o terminal; a tela recebe uma mensagem genérica.
-      console.error(`[IPC ${canal}]`, erro);
+      // O detalhe vai só para o terminal (sem dados pessoais); a tela recebe uma mensagem genérica.
+      LogSeguro.erro(`[IPC ${canal}]`, erro);
       return falha('INTERNO', 'Erro inesperado. Tente novamente.');
     }
   }
