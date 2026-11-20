@@ -8,12 +8,12 @@
 |---|---|---|
 | 1. Electron (isolamento, sandbox, navegação, IPC) | Pessoa 1 | Feito |
 | 2. Banco de dados (queries parametrizadas, usuário com privilégio mínimo, segredos no `.env`) | Pessoa 1 | Feito |
-| 3. Autenticação (bcrypt, login, sessão) | Pessoa 3 | A fazer |
-| 4. Controle de acesso por perfil | Pessoa 3 | A fazer |
-| 5. Validação de entradas (zod) | Pessoa 3 | A fazer |
-| 6. Dados sensíveis / LGPD | Pessoa 3 | A fazer |
+| 3. Autenticação (bcrypt, login, sessão) | Pessoa 3 | Feito |
+| 4. Controle de acesso por perfil | Pessoa 3 | Feito |
+| 5. Validação de entradas (zod) | Pessoa 3 | Feito |
+| 6. Dados sensíveis / LGPD | Pessoa 3 | Feito |
 | 7. Interface (XSS, CSP, dados na tela) e instalador | Pessoa 4 | Feito |
-| 8. APIs externas (chaves, timeout) | Pessoa 3 | A fazer |
+| 8. APIs externas (chaves, timeout) | Pessoa 3 | Feito |
 
 ---
 
@@ -115,15 +115,75 @@ object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'
 
 ---
 
-## 3 a 8. Partes da Pessoa 3 e da Pessoa 4
+## 3. Autenticação (Pessoa 3)
 
-*A preencher pelos responsáveis seguindo o mesmo formato (Decisão | Onde | Por quê).* Itens previstos:
+Código: [`src/main/services/AuthService.ts`](../src/main/services/AuthService.ts), [`src/main/security/HashSenha.ts`](../src/main/security/HashSenha.ts), [`src/main/security/LimiteTentativas.ts`](../src/main/security/LimiteTentativas.ts), [`src/main/security/Sessao.ts`](../src/main/security/Sessao.ts), [`src/main/ipc/auth.ipc.ts`](../src/main/ipc/auth.ipc.ts).
+Testes: [`tests/main/services/AuthService.test.ts`](../tests/main/services/AuthService.test.ts), [`tests/main/security/HashSenha.test.ts`](../tests/main/security/HashSenha.test.ts), [`tests/main/security/LimiteTentativas.test.ts`](../tests/main/security/LimiteTentativas.test.ts), [`tests/main/services/AuthUsuarios.integracao.test.ts`](../tests/main/services/AuthUsuarios.integracao.test.ts) (com o MySQL do seed).
 
-- **Autenticação (P3):** bcrypt custo ≥ 10, mensagem de erro genérica, limite de tentativas, sessão guardada no Main.
-- **Controle de acesso (P3):** `exigirPerfil('ADMIN')` nos handlers; a tela só esconde botões, quem bloqueia é o Main.
-- **Validação (P3):** zod em todo DTO que chega pelo IPC (CPF, CEP, e-mail, datas, valores).
-- **LGPD (P3):** CPF mascarado nas listagens, logs sem dados pessoais, coletar só o necessário.
-- **APIs externas (P3):** chaves no `.env`, timeout, tratamento de falha de rede.
+| Decisão | Onde | Por quê |
+|---|---|---|
+| Senhas guardadas só como **hash bcrypt, custo 10** (coluna `senha_hash CHAR(60)`); o texto da senha nunca é gravado nem aparece em log | `HashSenha.ts`, `UsuarioService.ts` | Se o banco vazar, as senhas não aparecem. O bcrypt é lento de propósito e usa um *salt* aleatório por senha: a mesma senha gera hashes diferentes e não dá para usar tabelas prontas. Custo 10 deixa o login rápido para a pessoa e caro para quem tenta milhões de senhas. |
+| O login acontece **no Main**: a tela manda e-mail e senha, o Main confere e responde só `{ id, nome, email, perfil }` | `AuthService.login` | A tela não recebe o hash nem decide se a senha está certa. O `UsuarioSessaoDTO` não tem campo de senha. |
+| **Mensagem genérica**: "E-mail ou senha incorretos." tanto para e-mail que não existe quanto para senha errada | `AuthService.login` | Uma mensagem diferente para cada caso diria a um curioso quais e-mails têm conta na loja. |
+| Quando o e-mail não existe, a senha é conferida mesmo assim contra um **hash fictício** | `HashSenha.conferir` | Sem isso a resposta para e-mail inexistente seria instantânea e a de senha errada demoraria (bcrypt), o que também revelaria quem tem conta. |
+| **Limite de tentativas**: 5 senhas erradas seguidas bloqueiam aquele e-mail por 5 minutos, mesmo com a senha certa; um login certo zera a contagem | `LimiteTentativas.ts` | Impede testar uma lista de senhas na tela de login. O e-mail é comparado sem maiúsculas/espaços, para "Admin@" e "admin@" contarem juntos. |
+| Usuário **desativado não entra**. Essa mensagem só aparece para quem acertou a senha | `AuthService.login` | Tirar o acesso de um ex-funcionário é desativar o usuário, sem apagar o histórico de reservas dele. Como a pessoa já provou que sabe a senha, dizer o motivo não revela nada. |
+| Quem está logado fica na **`Sessao`, no Main**; `auth:logout` limpa a sessão | `Sessao.ts`, `auth.ipc.ts` | A tela não guarda token nem "perfil" que possa ser alterado. Toda chamada IPC consulta a sessão do Main. |
+| **Trocar a senha** pede a senha atual e exige que a nova seja diferente; se o usuário foi desativado enquanto estava logado, a sessão é encerrada | `AuthService.alterarSenha` | Se alguém sentar num computador deixado logado, não consegue trocar a senha sem saber a atual. |
+| Senha de **8 a 72 caracteres** (mesmo mínimo da tela, `SENHA_MINIMO`) | `usuario.schema.ts` | 8 é o mínimo combinado com a Pessoa 4. 72 é o limite do bcrypt: acima disso ele ignoraria o resto da senha sem avisar. |
+| `ultimo_login` gravado com o relógio do banco a cada login certo | `UsuarioRepository.registrarLogin` | O ADMIN vê na tela Usuários quem não entra há muito tempo e pode desativar. |
+
+**Limitações conhecidas:** o limite de tentativas fica na memória e recomeça se o app for fechado e aberto de novo. A sessão também é só da memória: fechar o app desloga. Para um app desktop de uma loja, onde quem tenta precisa estar no próprio computador, consideramos aceitável.
+
+## 4. Controle de acesso por perfil (Pessoa 3)
+
+Código: [`src/main/ipc/permissoes.ts`](../src/main/ipc/permissoes.ts) (tabela da Pessoa 1), [`src/main/services/UsuarioService.ts`](../src/main/services/UsuarioService.ts), [`src/main/ipc/usuarios.ipc.ts`](../src/main/ipc/usuarios.ipc.ts).
+Testes: [`tests/main/ipc/auth-usuarios.ipc.test.ts`](../tests/main/ipc/auth-usuarios.ipc.test.ts), [`tests/main/services/UsuarioService.test.ts`](../tests/main/services/UsuarioService.test.ts), [`tests/main/ipc/permissoes.test.ts`](../tests/main/ipc/permissoes.test.ts).
+
+| Decisão | Onde | Por quê |
+|---|---|---|
+| Dois perfis: **ADMIN** (tudo) e **FUNCIONARIO** (atendimento: clientes, reservas, devoluções, pagamentos). Cada canal tem `PUBLICO`, `LOGADO` ou `ADMIN`, conferido pelo `RegistroIpc` **antes** do handler | `permissoes.ts` | O funcionário do balcão não precisa cadastrar usuários, mudar preços ou apagar registros financeiros. Menos permissão = menos estrago se a conta dele for usada por outra pessoa. |
+| Todos os canais `usuarios:*` são **só ADMIN**; `auth:login` e `auth:sessaoAtual` são públicos (a tela chama antes do login); `auth:logout` e `auth:alterarSenha` exigem alguém logado | `permissoes.ts`, `auth.ipc.ts` | `sessaoAtual` precisa responder `null` antes do login para a tela saber que deve mostrar o login; ele nunca devolve dados de outra pessoa. |
+| A tela **esconde** o menu Usuários para o FUNCIONARIO, mas quem bloqueia é o Main | Pessoa 4 (seção 7.3) | Mesmo que alguém chame `window.api.usuarios.listar()` na mão como FUNCIONARIO, o Main responde `NAO_AUTORIZADO` sem nenhum dado (testado em `auth-usuarios.ipc.test.ts`). |
+| O ADMIN **não pode desativar, rebaixar nem excluir a si mesmo** | `UsuarioService.atualizar` / `excluir` | Evita a loja ficar sem nenhum administrador por um clique errado. |
+| Usuário que já **registrou reservas não pode ser excluído**, só desativado | `UsuarioService.excluir` (+ FK `ON DELETE RESTRICT`) | O histórico precisa continuar dizendo quem atendeu cada reserva. Desativar tira o acesso sem apagar esse registro. |
+| O `usuarioId` da reserva vem **da sessão**, nunca da tela | `reservas.ipc.ts` (Pessoa 2) | A tela não consegue registrar uma reserva "em nome" de outro funcionário. |
+| E-mail único com aviso no próprio campo (`erro.campos.email`) e o `UNIQUE` do banco como garantia final | `UsuarioService`, migration 001 | Dois usuários com o mesmo e-mail tornariam o login ambíguo. |
+
+## 5. Validação de entradas (Pessoa 3)
+
+Código: [`src/main/security/validators/`](../src/main/security/validators/) (`Validador.ts` e um `*.schema.ts` por domínio), [`src/shared/validadores/`](../src/shared/validadores/) (CPF e CNPJ).
+Testes: [`tests/main/security/validators/`](../tests/main/security/validators/).
+
+| Decisão | Onde | Por quê |
+|---|---|---|
+| **Todo** canal IPC que recebe dados passa por um schema **zod** antes de chegar ao service (`Validador.validar`) | handlers em `src/main/ipc/*.ipc.ts` | O que vem da tela é `unknown` até ser validado. Mesmo que alguém altere a tela ou chame `window.api` na mão, dado fora do formato não chega ao banco. |
+| O schema **descarta campos que não conhece** | `Validador.ts` | Uma tela alterada que mande `perfil: 'ADMIN'` no login, `senhaHash` no cadastro de usuário ou `usuarioId` na reserva é simplesmente ignorada (há testes para isso). |
+| **CPF** com os 2 dígitos verificadores (rejeita também `111.111.111-11`); **CNPJ** idem | `cliente.schema.ts`, `fornecedor.schema.ts`, `shared/validadores/` | A mesma função roda na tela (aviso na hora) e no Main (garantia). CPF errado impediria, por exemplo, a emissão de recibo. |
+| **CEP** com 8 dígitos; **UF** com 2 letras; **e-mail** no formato certo e em minúsculas; **telefone** com DDD (10 ou 11 dígitos) | `campos.schema.ts` | Aceita com ou sem pontuação e grava só os dígitos, sempre no mesmo formato. |
+| **Datas** `AAAA-MM-DD` que existem no calendário (recusa 30/02); **valores** positivos com no máximo 2 casas | `Campos.data`, `Campos.dinheiro` | Data impossível ou valor com 5 casas quebraria o cálculo de multa e o `DECIMAL(10,2)` do banco. |
+| **Tamanho máximo** de cada texto = tamanho da coluna no banco | todos os schemas | O erro aparece embaixo do campo, em vez de virar um erro do MySQL. |
+| Erros de validação voltam **por campo** (`{ codigo: 'VALIDACAO', campos: { cpf: '...' } }`) | `Validador.ts` | A tela marca o campo certo e a pessoa entende o que corrigir, sem mensagem técnica. |
+| A validação acontece **antes** de qualquer chamada externa ou ao banco | ex.: `integracoes:buscarCep` | CEP com 4 dígitos nem chega ao ViaCEP: economiza internet e não manda lixo para fora. |
+
+## 6. Dados sensíveis e LGPD (Pessoa 3)
+
+Código: [`src/main/security/LogSeguro.ts`](../src/main/security/LogSeguro.ts), [`src/main/services/mapeadores/ClienteMapper.ts`](../src/main/services/mapeadores/ClienteMapper.ts), [`src/main/services/integracoes/RotaService.ts`](../src/main/services/integracoes/RotaService.ts).
+Testes: [`tests/main/security/LogSeguro.test.ts`](../tests/main/security/LogSeguro.test.ts), [`tests/main/services/RotaService.test.ts`](../tests/main/services/RotaService.test.ts).
+
+**Dados pessoais que o sistema guarda:** do cliente, nome, CPF, telefone, e-mail (opcional) e endereço; do funcionário, nome e e-mail. Base legal (LGPD, art. 7º, V): execução do contrato de aluguel. O CPF identifica quem é responsável pelo equipamento; o endereço serve para a busca presencial em caso de atraso.
+
+| Decisão | Onde | Por quê |
+|---|---|---|
+| **Coletar só o necessário**: não há data de nascimento, RG, foto, renda ou dados de cartão. O e-mail do cliente é opcional | migration 001, `cliente.schema.ts` | Dado que não existe não vaza. Pagamento registra só forma e valor, nunca número de cartão. |
+| **CPF mascarado** nas listagens (`***.982.247-**`), montado no Main; o CPF completo só aparece no formulário de edição | `ClienteMapper.mascararCpf`, Pessoa 4 (seção 7.4) | Quem está no balcão vê o suficiente para conferir o cliente sem o documento inteiro ficar exposto na tela. |
+| **Logs sem dados pessoais**: antes de ir para o terminal, mensagens de erro passam pelo `LogSeguro`, que troca CPF/telefone por `[número]`, e-mail por `[e-mail]` e o texto de busca de URLs por `?[...]`. Os campos `sql` e `values` do erro do MySQL não são logados | `LogSeguro.ts`, `registrarHandlers.ts`, `app.ipc.ts`, `EndurecimentoElectron.ts` | Erro real do MySQL: *"Duplicate entry '52998224725' for key 'uk_clientes_cpf'"*. Sem a máscara, o CPF do cliente ficaria no log. Log costuma ser copiado para pedir ajuda, então não pode carregar dados pessoais. |
+| **Senha e hash nunca saem do Main**: `UsuarioDTO` e `UsuarioSessaoDTO` não têm esses campos | `UsuarioService.paraDTO`, `AuthService.paraSessao` | Há testes conferindo que nenhuma resposta leva `senhaHash`. |
+| **Minimização nas APIs externas**: para o mapa vão só rua, número, bairro, cidade, UF e CEP. Nome, CPF, telefone, e-mail e complemento **não saem do computador**. A previsão do tempo recebe só cidade e UF; o ViaCEP, só o CEP | `RotaService`, `PrevisaoClimaService`, `ViaCepClient` | Os serviços públicos não precisam saber **quem** mora no endereço. Há teste conferindo que nenhum dado pessoal vai na consulta do mapa. |
+| A API de notificações recebe só nome, e-mail e telefone; nunca CPF ou endereço | Pessoa 1 (seção 2.2) | Mesmo princípio de minimização. |
+| Cliente com reservas não é apagado (`ON DELETE RESTRICT`) | Pessoa 1 e 2 | O histórico financeiro precisa ser guardado. O que dá para fazer é corrigir os dados cadastrais (direito de correção, art. 18, III). |
+
+**Limitação conhecida:** o banco não é criptografado em disco; a proteção é o usuário do MySQL com privilégio mínimo e a senha no `.env` (seção 2). Para uma loja, o recomendado é deixar o MySQL só em `127.0.0.1` e usar a criptografia de disco do próprio Windows (BitLocker).
 
 ---
 
@@ -191,3 +251,31 @@ Testes: [`tests/main/config/LocalArquivoEnv.test.ts`](../tests/main/config/Local
 | **Sem atualização automática** (`publish: null`) | `electron-builder.yml` | O app não baixa nem executa nada da internet sozinho. Versão nova = instalador novo, gerado pelo grupo. |
 | Desinstalar **não apaga** a pasta de dados (`deleteAppDataOnUninstall: false`) | `electron-builder.yml` | Reinstalar ou atualizar não perde a configuração da loja. Para remover tudo, é só apagar a pasta à mão (explicado em `docs/INSTALACAO.md`). |
 | **Limitação conhecida:** o instalador não é assinado com certificado de código | — | Certificado é pago. Na primeira execução o Windows SmartScreen avisa ("Mais informações" → "Executar assim mesmo"). Em produção, assinar o `.exe` permitiria ao Windows confirmar quem publicou o programa. |
+
+---
+
+## 8. APIs externas (Pessoa 3)
+
+Código: [`src/main/integrations/`](../src/main/integrations/) (`ClienteHttp.ts`, `CacheMemoria.ts`, `ViaCepClient.ts`, `ClimaClient.ts`, `RotasClient.ts`), [`src/main/services/integracoes/`](../src/main/services/integracoes/), [`src/main/ipc/integracoes.ipc.ts`](../src/main/ipc/integracoes.ipc.ts).
+Testes: [`tests/main/integrations/`](../tests/main/integrations/), [`tests/main/services/PrevisaoClimaService.test.ts`](../tests/main/services/PrevisaoClimaService.test.ts), [`tests/main/ipc/integracoes.ipc.test.ts`](../tests/main/ipc/integracoes.ipc.test.ts).
+
+| API | Serviço | Para quê | Chave? |
+|---|---|---|---|
+| 1. CEP | ViaCEP (`viacep.com.br`) | Preencher rua, bairro, cidade e UF no cadastro do cliente | Não |
+| 2. Clima | Open-Meteo (`geocoding-api.open-meteo.com`, `api.open-meteo.com`) | Previsão do dia da retirada e alerta para categorias sensíveis ao clima | Não |
+| 3. Rotas | Nominatim e OSRM (OpenStreetMap) | Distância e tempo até o cliente com devolução atrasada | Não |
+| 4. Notificações | A nossa API (Pessoa 1, seção 2.2) | Lembrete de devolução e aviso de multa | Sim (`NOTIFICACOES_CHAVE` no `.env`) |
+
+| Decisão | Onde | Por quê |
+|---|---|---|
+| As APIs são chamadas **só pelo Main**, nunca pela tela | `integracoes.ipc.ts` | A CSP da tela (`default-src 'self'`) bloqueia qualquer acesso à internet. Se um dia usarmos uma API com chave, ela fica no Main e nunca chega à tela. |
+| Escolhemos APIs **sem chave** para CEP, clima e rotas | — | Nenhum segredo para guardar, vazar ou expirar. A configuração que existe (`LOJA_ENDERECO`, `INTEGRACOES_TEMPO_LIMITE_MS`) fica no `.env`, que não vai para o Git nem para o instalador; o `.env.example` mostra o formato. |
+| Toda chamada tem **tempo limite** (8 s, `AbortController`) | `ClienteHttp.ts` | Se o serviço travar, a pessoa recebe "demorou demais" em vez de ficar com a tela parada. |
+| Falha de rede, demora, limite de uso (HTTP 429), erro do servidor ou JSON inválido viram **`IntegracaoError` com frase amigável** | `ClienteHttp.ts` | A tela nunca recebe stack trace nem a resposta crua do serviço. Para o CEP a mensagem termina com "Preencha o endereço à mão." |
+| **A integração nunca bloqueia o trabalho**: sem CEP, o endereço é digitado; sem previsão, a reserva continua ("Previsão indisponível"); sem rota, a devolução continua | `ViaCepClient`, `PrevisaoClimaService`, Pessoa 4 | A loja não para porque um serviço gratuito saiu do ar. |
+| **Cache em memória** (CEP 1 dia, cidade 7 dias, previsão 1 hora, endereço no mapa 7 dias) com limite de itens | `CacheMemoria.ts` | Menos chamadas = mais rápido e respeita os limites de uso gratuitos (o Nominatim pede no máximo 1 pedido por segundo). Erros não ficam no cache. |
+| Só **HTTPS**, endereços fixos no código; a tela não escolhe a URL | clientes em `integrations/` | Ninguém consegue fazer o Main chamar um endereço qualquer passando uma URL pela tela. |
+| O Nominatim recebe um **User-Agent que identifica o sistema**, sem dados pessoais | `RotasClient.USER_AGENT` | Exigência da política de uso do OpenStreetMap. |
+| O **link do mapa** é sempre `https://www.openstreetmap.org/...` | `RotasClient.linkMapa` | Esse domínio está na lista da `PoliticaOrigem` (seção 1.3), então o link abre no navegador do sistema; qualquer outro seria bloqueado. |
+| A resposta das APIs é tratada como **dado não confiável**: só os campos esperados são copiados, números arredondados e textos com `trim` | `ViaCepClient`, `ClimaClient`, `RotasClient` | Um campo a mais ou um formato estranho na resposta não chega à tela. E a tela mostra tudo com `textContent` (seção 7.1). |
+| Os testes usam **respostas falsas** (`fetch` de mentira) | `tests/main/integrations/` | Os testes não dependem da internet e cobrem os casos difíceis de reproduzir: CEP inexistente, tempo esgotado, limite diário, rota impossível. |
