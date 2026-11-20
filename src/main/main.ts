@@ -4,6 +4,7 @@ import { Configuracao } from './config/Configuracao';
 import { Database } from './database/Database';
 import { NotificacaoClient } from './integrations/NotificacaoClient';
 import { registrarAppIpc, type DependenciasApp } from './ipc/app.ipc';
+import { registrarAuthIpc } from './ipc/auth.ipc';
 import { registrarCategoriasIpc } from './ipc/categorias.ipc';
 import { registrarClientesIpc } from './ipc/clientes.ipc';
 import { registrarEquipamentosIpc } from './ipc/equipamentos.ipc';
@@ -13,8 +14,10 @@ import { registrarManutencoesIpc } from './ipc/manutencoes.ipc';
 import { registrarNotificacoesIpc } from './ipc/notificacoes.ipc';
 import { RegistroIpc } from './ipc/registrarHandlers';
 import { registrarReservasIpc } from './ipc/reservas.ipc';
+import { registrarUsuariosIpc } from './ipc/usuarios.ipc';
 import { criarRepositorios } from './repositories';
 import { CalendarioISO } from './domain/CalendarioISO';
+import { AuthService } from './services/AuthService';
 import { CategoriaService } from './services/CategoriaService';
 import { ClienteService } from './services/ClienteService';
 import { DisponibilidadeService } from './services/DisponibilidadeService';
@@ -29,8 +32,11 @@ import { DevolucaoService } from './services/reserva/DevolucaoService';
 import { ItemReservaService } from './services/reserva/ItemReservaService';
 import { ReservaService } from './services/reserva/ReservaService';
 import { UnidadeDeTrabalho } from './services/UnidadeDeTrabalho';
+import { UsuarioService } from './services/UsuarioService';
 import { NotificacaoService } from './services/NotificacaoService';
 import { EndurecimentoElectron } from './security/EndurecimentoElectron';
+import { HashSenha } from './security/HashSenha';
+import { LimiteTentativas } from './security/LimiteTentativas';
 import { PoliticaOrigem } from './security/PoliticaOrigem';
 import { Sessao } from './security/Sessao';
 
@@ -96,7 +102,7 @@ class Aplicacao {
 
   /**
    * Monta repositórios e services (injeção de dependência pelo construtor) e
-   * registra os canais de cada domínio. Próximos: auth, usuarios, multas...
+   * registra os canais de cada domínio.
    */
   private registrarDominios(registro: RegistroIpc, db: Database): void {
     const dados = new UnidadeDeTrabalho(db);
@@ -109,6 +115,12 @@ class Aplicacao {
       repos.reservas
     );
 
+    const hashSenha = new HashSenha();
+    registrarAuthIpc(
+      registro,
+      new AuthService(repos.usuarios, this.sessao, hashSenha, new LimiteTentativas())
+    );
+    registrarUsuariosIpc(registro, new UsuarioService(repos.usuarios, hashSenha, this.sessao));
     registrarClientesIpc(
       registro,
       new ClienteService(repos.clientes, repos.reservas),
