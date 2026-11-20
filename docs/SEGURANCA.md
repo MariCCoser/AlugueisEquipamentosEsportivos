@@ -12,7 +12,7 @@
 | 4. Controle de acesso por perfil | Pessoa 3 | A fazer |
 | 5. Validação de entradas (zod) | Pessoa 3 | A fazer |
 | 6. Dados sensíveis / LGPD | Pessoa 3 | A fazer |
-| 7. Interface (XSS) | Pessoa 4 | Em andamento |
+| 7. Interface (XSS, CSP, dados na tela) e instalador | Pessoa 4 | Feito |
 | 8. APIs externas (chaves, timeout) | Pessoa 3 | A fazer |
 
 ---
@@ -123,13 +123,71 @@ object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'
 - **Controle de acesso (P3):** `exigirPerfil('ADMIN')` nos handlers; a tela só esconde botões, quem bloqueia é o Main.
 - **Validação (P3):** zod em todo DTO que chega pelo IPC (CPF, CEP, e-mail, datas, valores).
 - **LGPD (P3):** CPF mascarado nas listagens, logs sem dados pessoais, coletar só o necessário.
-- **Interface (P4):** `textContent` em vez de `innerHTML`, respeitar a CSP (ver seção 7).
 - **APIs externas (P3):** chaves no `.env`, timeout, tratamento de falha de rede.
 
 ---
 
-## 7. Interface (Pessoa 4)
+## 7. Interface e instalador (Pessoa 4)
+
+Código: [`src/renderer/nucleo/dom.ts`](../src/renderer/nucleo/dom.ts), [`src/renderer/components/`](../src/renderer/components/), [`src/renderer/pages/`](../src/renderer/pages/), [`src/renderer/index.html`](../src/renderer/index.html), [`electron-builder.yml`](../electron-builder.yml), [`src/main/config/LocalArquivoEnv.ts`](../src/main/config/LocalArquivoEnv.ts).
+Testes: [`tests/main/config/LocalArquivoEnv.test.ts`](../tests/main/config/LocalArquivoEnv.test.ts), [`tests/shared/cnpj.test.ts`](../tests/shared/cnpj.test.ts) e os de `tests/renderer/`.
+
+**Princípio:** a tela é a parte **menos confiável** do sistema. Ela existe para a pessoa trabalhar com conforto (máscaras, avisos na hora, botões que somem), mas nenhuma regra de segurança depende dela. Tudo o que a tela confere, o Main confere de novo.
+
+> Algumas telas citadas aqui (clientes, usuários, reservas, devoluções) chegam pelos PRs #10 e #11.
+
+### 7.1 Contra XSS (texto do banco nunca vira HTML)
 
 | Decisão | Onde | Por quê |
 |---|---|---|
-| Estilos carregados por `<link rel="stylesheet">` no `index.html` (`tema.css`, `layout.css`, `componentes.css`), e **não** por `import './x.css'` no `main.ts` | `src/renderer/index.html` | Em modo dev o Vite injeta o CSS importado como `<style>` inline, que a CSP (`style-src 'self'`) bloqueia. Com `<link>` a CSP continua restritiva, sem `'unsafe-inline'`, tanto em dev quanto no app instalado. Feito pela Pessoa 3 na base visual da interface (PR #6). |
+| Todas as telas são montadas com `el()`, que coloca o texto com **`textContent`**. Nenhuma tela usa `innerHTML`, `outerHTML`, `insertAdjacentHTML` ou `document.write` | `nucleo/dom.ts` | Um cliente cadastrado com o nome `<img src=x onerror=alert(1)>` aparece na tabela **como texto**, sem executar nada. Os dados que vêm do banco (nomes, descrições, observações) são justamente o que um atacante controlaria. |
+| Atributos entram com `setAttribute` como texto; eventos com `addEventListener` (nunca `onclick="..."`) | `nucleo/dom.ts` | Atributo de evento em texto é *script inline*, que a CSP bloqueia — e não queremos depender só da CSP. |
+| A `Tabela` genérica recebe **funções** que devolvem texto ou elementos, nunca HTML pronto | `components/Tabela.ts` | Quem cria uma tela nova não tem como "esquecer" de escapar: não existe caminho para HTML. |
+| Sem `eval`, `new Function` ou `setTimeout('texto')` | todo o renderer | A CSP (`script-src 'self'`, sem `'unsafe-eval'`) já bloquearia; o código nem tenta. |
+
+### 7.2 Respeito à CSP
+
+| Decisão | Onde | Por quê |
+|---|---|---|
+| Estilos carregados por `<link rel="stylesheet">` no `index.html` (`tema.css`, `layout.css`, `componentes.css`), e **não** por `import './x.css'` no `main.ts` | `src/renderer/index.html` | Em modo dev o Vite injeta o CSS importado como `<style>` inline, que a CSP (`style-src 'self'`) bloqueia. Com `<link>` a CSP continua restritiva, sem `'unsafe-inline'`, tanto em dev quanto no app instalado (PR #6). |
+| Nada de `style="..."` montado com dados; a aparência muda por **classes** (`etiqueta--erro`, `cartao-numero--alerta`, `hidden`) | `styles/componentes.css` | Mantém `style-src 'self'` sem exceções. |
+| Sem CDN, fontes ou imagens da internet; o ícone do app é um arquivo local | `index.html`, `build/` | `default-src 'self'`: a tela não fala com a internet. CEP, clima e rotas são buscados pelo Main. |
+
+### 7.3 A tela não decide nada sozinha
+
+| Decisão | Onde | Por quê |
+|---|---|---|
+| A tela de Usuários só mostra dados para ADMIN, mas quem bloqueia é o Main (`usuarios:*` = `ADMIN` em `permissoes.ts`) | `pages/usuarios/UsuariosTela.ts` | Esconder a tela é só para não confundir o funcionário. Quem digitar `#/usuarios` na mão recebe "sem permissão" do Main, sem nenhum dado. |
+| A reserva é enviada **sem preço e sem usuário**: só cliente, datas, ids dos equipamentos e caução. O total mostrado antes de confirmar é uma estimativa | `pages/reservas/NovaReservaTela.ts` | Se a tela mandasse a diária ou o total, bastaria alterar a mensagem para alugar mais barato. O Main copia a diária do cadastro e pega o usuário da sessão. |
+| A multa da devolução é **calculada pelo Main** (`multas:calcular`) e só mostrada na tela | `pages/devolucoes/DevolucaoFormulario.ts` | Mesmo motivo: valor financeiro nunca vem da tela. |
+| Validações na tela (CPF, CNPJ, datas, valores) usam as **mesmas regras** do Main (`shared/validadores/`), mas o Main valida de novo com zod | formulários e `components/Campos.ts` | Avisar na hora é conforto; a garantia é no Main. Os erros do Main voltam por campo (`erro.campos`) e aparecem embaixo do campo certo (`aplicarErros`). |
+| Parâmetros do endereço são conferidos: `#/clientes/abc` vira "endereço inválido" e `?aba=` / `?status=` só aceitam valores de uma lista | `ClienteHistoricoTela.ts`, telas com abas e filtros | O endereço (hash) é texto que qualquer um pode alterar. |
+
+### 7.4 Dados pessoais e mensagens na tela
+
+| Decisão | Onde | Por quê |
+|---|---|---|
+| Listas e histórico mostram o **CPF mascarado** (`***.456.789-**`), que já vem pronto do Main; o CPF completo só aparece no formulário de edição | `pages/clientes/` | LGPD: quem só consulta a lista não precisa ver o documento inteiro, e ele não fica exposto na tela do balcão. |
+| Senhas em `type="password"` com `autocomplete="new-password"`; a senha nunca volta do Main (o `UsuarioDTO` não tem senha) e, na edição, "nova senha" é opcional | `pages/usuarios/UsuarioFormulario.ts` | A senha não fica visível nem é guardada pelo preenchimento automático. O Main grava só o hash (bcrypt, Pessoa 3). |
+| A tela mostra só a `mensagem` amigável do Main. Falha de comunicação vira "Não foi possível se comunicar com o sistema" e o detalhe vai só para o console | `components/Consulta.ts` e formulários | Stack trace, SQL ou caminho de arquivo não aparecem para quem está no balcão. |
+| Ações que não têm volta (excluir, cancelar reserva, desativar acesso) pedem **confirmação**, com o foco inicial em "Cancelar" | `components/ConfirmDialog.ts` | Um Enter apertado sem querer não apaga nada. |
+| O link do mapa (rota até o cliente) vem do Main e abre com `target="_blank"`; quem decide se abre é o `setWindowOpenHandler` (só HTTPS de domínios da lista, seção 1.3) | `pages/devolucoes/DevolucoesTela.ts` | A tela não abre URL nenhuma por conta própria. |
+
+### 7.5 API simulada só em desenvolvimento
+
+| Decisão | Onde | Por quê |
+|---|---|---|
+| O `window.api` falso (dados de exemplo para trabalhar nas telas no navegador) só é carregado se **não houver preload** e `import.meta.env.DEV` for verdadeiro | `src/renderer/main.ts`, `src/renderer/dev/` | No build de produção `import.meta.env.DEV` é `false` e o Vite remove esse código: o app instalado nunca tem dados falsos nem um atalho que ignore o Main. Dentro do Electron o preload sempre existe, então nem em dev a simulação substitui o IPC real. |
+
+### 7.6 Instalador (electron-builder)
+
+| Decisão | Onde | Por quê |
+|---|---|---|
+| O `.env` **não entra** no instalador: o pacote leva só `out/**` e `package.json` (mais o `.env.example`, sem segredos) | `electron-builder.yml` → `files` | O instalador pode ser copiado e repassado; a senha do banco e a chave da API não podem ir junto. Cada loja tem o seu banco. |
+| No app instalado, o `.env` é lido de `%APPDATA%\Locadora Esportiva\.env` (ou de ao lado do `.exe`), nunca da "pasta atual" | `src/main/config/LocalArquivoEnv.ts` | Aberto pelo menu Iniciar, a pasta atual costuma ser `C:\Windows\System32`. Um caminho fixo e conhecido evita ler um `.env` qualquer de outra pasta. A pasta de dados é do próprio usuário do Windows. |
+| Código empacotado em **asar** e sem arquivos `.map` | `electron-builder.yml` | O código não fica solto em pastas para ser editado com o Bloco de Notas, e o pacote não leva o mapa do código-fonte. |
+| DevTools desligado no app instalado (`devTools: !app.isPackaged`) | seção 1.1 (Pessoa 1) | No balcão, ninguém abre o console para chamar `window.api` na mão. |
+| Instalação **por usuário** (`perMachine: false`), sem pedir administrador | `electron-builder.yml` → `nsis` | Privilégio mínimo: o instalador não precisa de permissão de administrador para nada. |
+| **Sem atualização automática** (`publish: null`) | `electron-builder.yml` | O app não baixa nem executa nada da internet sozinho. Versão nova = instalador novo, gerado pelo grupo. |
+| Desinstalar **não apaga** a pasta de dados (`deleteAppDataOnUninstall: false`) | `electron-builder.yml` | Reinstalar ou atualizar não perde a configuração da loja. Para remover tudo, é só apagar a pasta à mão (explicado em `docs/INSTALACAO.md`). |
+| **Limitação conhecida:** o instalador não é assinado com certificado de código | — | Certificado é pago. Na primeira execução o Windows SmartScreen avisa ("Mais informações" → "Executar assim mesmo"). Em produção, assinar o `.exe` permitiria ao Windows confirmar quem publicou o programa. |
