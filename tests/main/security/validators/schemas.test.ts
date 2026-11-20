@@ -77,6 +77,25 @@ describe('schemas de cliente', () => {
     });
   });
 
+  it('confere os dígitos verificadores do CPF (com ou sem pontuação)', () => {
+    expect(errosDe(criarClienteSchema, { ...clienteValido, cpf: '529.982.247-24' })).toEqual({
+      cpf: 'CPF inválido: confira os números.'
+    });
+    // 11 dígitos iguais passariam no cálculo, mas não são CPF
+    expect(errosDe(criarClienteSchema, { ...clienteValido, cpf: '111.111.111-11' })).toEqual({
+      cpf: 'CPF inválido: confira os números.'
+    });
+    expect(
+      Validador.validar(criarClienteSchema, { ...clienteValido, cpf: '111.444.777-35' }).cpf
+    ).toBe('11144477735');
+  });
+
+  it('na edição, o CPF enviado também precisa ser válido', () => {
+    expect(errosDe(atualizarClienteSchema, { id: 1, cpf: '12345678900' })).toEqual({
+      cpf: 'CPF inválido: confira os números.'
+    });
+  });
+
   it('entrada que nem é objeto é recusada', () => {
     expect(() => Validador.validar(criarClienteSchema, 'DROP TABLE')).toThrow(ValidacaoError);
   });

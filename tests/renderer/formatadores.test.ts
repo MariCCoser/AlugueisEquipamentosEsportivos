@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatarCep,
   formatarData,
   formatarMoeda,
   formatarTelefone,
@@ -45,5 +46,18 @@ describe('formatarTelefone', () => {
     expect(formatarTelefone('1')).toBe('(1');
     expect(formatarTelefone('113')).toBe('(11) 3');
     expect(formatarTelefone('11333344')).toBe('(11) 3333-44');
+  });
+});
+
+describe('formatarCep', () => {
+  it('coloca o traço depois do 5º dígito', () => {
+    expect(formatarCep('01310100')).toBe('01310-100');
+    expect(formatarCep('01310-100')).toBe('01310-100');
+  });
+
+  it('formata parcialmente enquanto a pessoa digita', () => {
+    expect(formatarCep('01310')).toBe('01310');
+    expect(formatarCep('013101')).toBe('01310-1');
+    expect(formatarCep('013101009')).toBe('01310-100');
   });
 });

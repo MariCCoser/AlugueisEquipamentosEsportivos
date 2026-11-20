@@ -5,6 +5,7 @@ import type { AppInfoDTO } from '@shared/dto/app.dto';
 import type { StatusBancoDTO } from '@shared/dto/banco.dto';
 import type { Database } from '../database/Database';
 import { DiagnosticoBanco } from '../database/DiagnosticoBanco';
+import { LogSeguro } from '../security/LogSeguro';
 import type { RegistroIpc } from './registrarHandlers';
 
 export interface DependenciasApp {
@@ -36,7 +37,7 @@ export function registrarAppIpc(
       const tabelas = await new DiagnosticoBanco(db).contarRegistros();
       return sucesso({ conectado: true, banco: nomeBanco, tabelas });
     } catch (erro) {
-      console.error('[banco]', erro);
+      LogSeguro.erro('[banco]', erro);
       return sucesso({
         conectado: false,
         mensagem:

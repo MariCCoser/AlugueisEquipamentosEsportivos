@@ -1,4 +1,5 @@
 import { app, session, shell, type WebContents, type WebPreferences } from 'electron';
+import { LogSeguro } from './LogSeguro';
 import type { PoliticaOrigem } from './PoliticaOrigem';
 
 /**
@@ -66,7 +67,7 @@ export class EndurecimentoElectron {
     const bloquearSeExterno = (evento: Electron.Event, url: string): void => {
       if (!this.politica.origemConfiavel(url)) {
         evento.preventDefault();
-        console.warn('[seguranca] navegação bloqueada:', url);
+        LogSeguro.aviso('[seguranca] navegação bloqueada:', url);
       }
     };
     contents.on('will-navigate', bloquearSeExterno);
@@ -78,7 +79,7 @@ export class EndurecimentoElectron {
     // Pop-ups nunca abrem dentro do app; links permitidos vão para o navegador do sistema.
     contents.setWindowOpenHandler(({ url }) => {
       if (this.politica.podeAbrirExterno(url)) void shell.openExternal(url);
-      else console.warn('[seguranca] link externo bloqueado:', url);
+      else LogSeguro.aviso('[seguranca] link externo bloqueado:', url);
       return { action: 'deny' };
     });
   }

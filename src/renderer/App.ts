@@ -2,10 +2,15 @@ import { Layout, type ItemMenu } from './components/Layout';
 import { NOME_APP, Roteador } from './nucleo/Roteador';
 import type { DefinicaoRota } from './util/rotas';
 import type { Tela } from './nucleo/Tela';
+import { DashboardTela } from './pages/DashboardTela';
 import { CategoriasTela } from './pages/categorias/CategoriasTela';
+import { ClienteHistoricoTela } from './pages/clientes/ClienteHistoricoTela';
+import { ClientesTela } from './pages/clientes/ClientesTela';
 import { EmConstrucaoTela } from './pages/EmConstrucaoTela';
+import { EquipamentosTela } from './pages/equipamentos/EquipamentosTela';
 import { FornecedoresTela } from './pages/fornecedores/FornecedoresTela';
-import { InicioTela } from './pages/InicioTela';
+import { StatusSistemaTela } from './pages/StatusSistemaTela';
+import { UsuariosTela } from './pages/usuarios/UsuariosTela';
 
 /** Itens do menu lateral, na ordem em que aparecem. */
 const MENU: readonly ItemMenu[] = [
@@ -29,9 +34,14 @@ const emConstrucao = (caminho: string): DefinicaoRota<Tela> => {
 
 /** Telas já construídas. */
 const TELAS: readonly DefinicaoRota<Tela>[] = [
-  { caminho: '/', criar: () => new InicioTela() },
+  { caminho: '/', criar: () => new DashboardTela() },
+  { caminho: '/sistema', criar: () => new StatusSistemaTela() },
   { caminho: '/categorias', criar: () => new CategoriasTela() },
-  { caminho: '/fornecedores', criar: (_p, consulta) => new FornecedoresTela(consulta) }
+  { caminho: '/fornecedores', criar: (_p, consulta) => new FornecedoresTela(consulta) },
+  { caminho: '/equipamentos', criar: (_p, consulta) => new EquipamentosTela(consulta) },
+  { caminho: '/clientes', criar: () => new ClientesTela() },
+  { caminho: '/clientes/:id', criar: (parametros) => new ClienteHistoricoTela(parametros['id']) },
+  { caminho: '/usuarios', criar: () => new UsuariosTela() }
 ];
 
 const ROTAS: readonly DefinicaoRota<Tela>[] = [

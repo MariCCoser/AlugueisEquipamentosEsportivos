@@ -1,7 +1,11 @@
 import type { ApiExposta } from '@shared/api';
 import type { ErroDTO, Resposta } from '@shared/dto/resposta';
 import { simularCategorias } from './simulacoes/categorias';
+import { simularClientes, simularIntegracoes } from './simulacoes/clientes';
+import { simularDashboard } from './simulacoes/dashboard';
+import { simularEquipamentos } from './simulacoes/equipamentos';
 import { simularFornecedores } from './simulacoes/fornecedores';
+import { simularAuth, simularUsuarios } from './simulacoes/usuarios';
 
 /**
  * window.api FALSO, usado só em desenvolvimento quando a tela é aberta
@@ -42,7 +46,13 @@ const respostas: Partial<Record<string, Simulacao>> = {
     })
   },
   categorias: simularCategorias(),
-  fornecedores: simularFornecedores()
+  fornecedores: simularFornecedores(),
+  dashboard: simularDashboard(),
+  equipamentos: simularEquipamentos(),
+  clientes: simularClientes(),
+  integracoes: simularIntegracoes(),
+  auth: simularAuth(),
+  usuarios: simularUsuarios()
 };
 
 function naoSimulado<T>(dominio: string, metodo: string): Resposta<T> {
