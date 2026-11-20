@@ -4,18 +4,20 @@ import type {
   CriarClienteDTO,
   FiltroClienteDTO
 } from '@shared/dto/cliente.dto';
+import { cpfValido } from '@shared/validadores/cpf';
 import { Campos } from './campos.schema';
 
 /**
  * Formato dos dados de cliente que chegam pelo IPC.
  * Tamanhos máximos = tamanhos das colunas na migration 001.
  *
- * Pendente (Pessoa 3): validar o dígito verificador do CPF. Hoje o schema
- * confere só os 11 dígitos.
+ * CPF: confere os 11 dígitos e os 2 dígitos verificadores, com a mesma função
+ * que a tela usa (`cpfValido`, de src/shared/validadores/cpf.ts). A tela avisa na
+ * hora; o Main confere de novo porque a tela não é confiável.
  */
 const camposCliente = {
   nome: Campos.texto('Nome', 120),
-  cpf: Campos.digitos('CPF', 11),
+  cpf: Campos.digitos('CPF', 11).refine(cpfValido, { error: 'CPF inválido: confira os números.' }),
   telefone: Campos.telefone(),
   email: Campos.emailOpcional(),
   cep: Campos.digitos('CEP', 8),
