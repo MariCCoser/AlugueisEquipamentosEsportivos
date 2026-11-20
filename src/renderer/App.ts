@@ -3,12 +3,16 @@ import { NOME_APP, Roteador } from './nucleo/Roteador';
 import type { DefinicaoRota } from './util/rotas';
 import type { Tela } from './nucleo/Tela';
 import { DashboardTela } from './pages/DashboardTela';
+import { DevolucoesTela } from './pages/devolucoes/DevolucoesTela';
 import { CategoriasTela } from './pages/categorias/CategoriasTela';
 import { ClienteHistoricoTela } from './pages/clientes/ClienteHistoricoTela';
 import { ClientesTela } from './pages/clientes/ClientesTela';
 import { EmConstrucaoTela } from './pages/EmConstrucaoTela';
 import { EquipamentosTela } from './pages/equipamentos/EquipamentosTela';
 import { FornecedoresTela } from './pages/fornecedores/FornecedoresTela';
+import { ManutencoesTela } from './pages/manutencoes/ManutencoesTela';
+import { PagamentosTela } from './pages/pagamentos/PagamentosTela';
+import { NovaReservaTela } from './pages/reservas/NovaReservaTela';
 import { StatusSistemaTela } from './pages/StatusSistemaTela';
 import { UsuariosTela } from './pages/usuarios/UsuariosTela';
 
@@ -41,7 +45,11 @@ const TELAS: readonly DefinicaoRota<Tela>[] = [
   { caminho: '/equipamentos', criar: (_p, consulta) => new EquipamentosTela(consulta) },
   { caminho: '/clientes', criar: () => new ClientesTela() },
   { caminho: '/clientes/:id', criar: (parametros) => new ClienteHistoricoTela(parametros['id']) },
-  { caminho: '/usuarios', criar: () => new UsuariosTela() }
+  { caminho: '/usuarios', criar: () => new UsuariosTela() },
+  { caminho: '/reservas/nova', criar: () => new NovaReservaTela() },
+  { caminho: '/devolucoes', criar: (_p, consulta) => new DevolucoesTela(consulta) },
+  { caminho: '/pagamentos', criar: (_p, consulta) => new PagamentosTela(consulta) },
+  { caminho: '/manutencoes', criar: (_p, consulta) => new ManutencoesTela(consulta) }
 ];
 
 const ROTAS: readonly DefinicaoRota<Tela>[] = [

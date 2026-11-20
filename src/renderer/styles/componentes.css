@@ -573,3 +573,201 @@ a.cartao-numero:hover {
 .secao {
   margin-bottom: var(--espaco-5);
 }
+
+/* Texto secundário dentro de parágrafos e cartões. */
+.texto-suave {
+  color: var(--cor-texto-suave);
+}
+
+/* ---------- Assistente (nova reserva) ---------- */
+.passos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-2) var(--espaco-4);
+  list-style: none;
+  padding: 0;
+  margin: 0 0 var(--espaco-4);
+}
+
+.passos__passo {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  color: var(--cor-texto-suave);
+}
+
+.passos__numero {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid currentcolor;
+  font-weight: 700;
+}
+
+.passos__passo--atual {
+  color: var(--cor-primaria);
+  font-weight: 700;
+}
+
+.passos__passo--atual .passos__numero {
+  background: var(--cor-primaria);
+  border-color: var(--cor-primaria);
+  color: var(--cor-primaria-texto);
+}
+
+.passos__passo--feito {
+  color: var(--cor-sucesso);
+}
+
+.assistente__titulo {
+  margin-top: 0;
+}
+
+.assistente__escolhido {
+  margin: var(--espaco-3) 0;
+  font-weight: 600;
+}
+
+.assistente__rodape {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--espaco-3);
+  margin-top: var(--espaco-4);
+  padding-top: var(--espaco-3);
+  border-top: 1px solid var(--cor-borda);
+}
+
+.assistente__sucesso {
+  margin-top: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--cor-sucesso);
+}
+
+/* Lista de opções clicáveis (clientes, equipamentos). */
+.lista-escolha {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: var(--espaco-2);
+}
+
+.lista-escolha--grade {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.lista-escolha__opcao {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espaco-2);
+  width: 100%;
+  padding: var(--espaco-2) var(--espaco-3);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+button.lista-escolha__opcao {
+  flex-direction: column;
+  gap: 0;
+}
+
+.lista-escolha__opcao:hover {
+  border-color: var(--cor-primaria);
+}
+
+.lista-escolha__opcao[aria-pressed='true'],
+.lista-escolha__opcao:has(input:checked) {
+  border: 2px solid var(--cor-primaria);
+  background: var(--cor-info-fundo);
+}
+
+.lista-escolha__opcao input {
+  margin-top: 4px;
+}
+
+.lista-escolha__opcao .etiqueta {
+  margin-top: var(--espaco-1);
+}
+
+/* Botão ao lado de campos na barra de filtros: alinha com a caixa, não com o rótulo. */
+.filtros > .botao {
+  margin-bottom: var(--espaco-3);
+}
+
+.tabela tfoot th,
+.tabela tfoot td {
+  font-weight: 700;
+  background: var(--cor-superficie-suave);
+  border-top: 2px solid var(--cor-borda);
+}
+
+/* ---------- Previsão do tempo (reserva) ---------- */
+.cartao-clima {
+  border-left: 5px solid var(--cor-info);
+}
+
+.cartao-clima h3 {
+  margin-top: 0;
+}
+
+.cartao-clima__resumo {
+  font-weight: 600;
+}
+
+.cartao-clima__dados {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--espaco-1) var(--espaco-3);
+}
+
+.cartao-clima__dados dd {
+  margin: 0;
+}
+
+.cartao-clima__alerta {
+  margin-bottom: 0;
+  padding: var(--espaco-2) var(--espaco-3);
+  border-radius: var(--raio);
+  background: var(--cor-alerta-fundo);
+  color: var(--cor-alerta);
+  font-weight: 600;
+}
+
+/* ---------- Devolução ---------- */
+.aviso-multa {
+  margin-bottom: var(--espaco-3);
+  padding: var(--espaco-2) var(--espaco-3);
+  border-radius: var(--raio);
+  background: var(--cor-sucesso-fundo);
+  color: var(--cor-sucesso);
+  font-weight: 600;
+}
+
+.aviso-multa:empty {
+  display: none;
+}
+
+.aviso-multa--atraso {
+  background: var(--cor-erro-fundo);
+  color: var(--cor-erro);
+}
+
+.total-lista {
+  margin-top: var(--espaco-3);
+  font-weight: 600;
+}
+
+/* Campo de valor curto (caução, custo): não precisa ocupar a linha toda. */
+.campo--curto {
+  max-width: 240px;
+}

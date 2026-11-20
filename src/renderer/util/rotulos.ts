@@ -5,6 +5,7 @@ import type {
   Perfil,
   StatusEquipamento,
   StatusReserva,
+  TipoManutencao,
   TipoPagamento
 } from '@shared/models/enums';
 
@@ -71,6 +72,11 @@ export const ROTULOS_FORMA_PAGAMENTO: Record<FormaPagamento, string> = {
   DINHEIRO: 'Dinheiro',
   PIX: 'Pix',
   CARTAO: 'Cartão'
+};
+
+export const ROTULOS_TIPO_MANUTENCAO: Record<TipoManutencao, string> = {
+  PREVENTIVA: 'Preventiva',
+  CORRETIVA: 'Corretiva (conserto)'
 };
 
 /** Transforma um Record de rótulos nas opções de um <select>. */

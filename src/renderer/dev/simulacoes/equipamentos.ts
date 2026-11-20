@@ -255,6 +255,19 @@ export function simularEquipamentos(): Simulacao {
       Object.assign(atual, final);
       return paraDTO(atual);
     },
+    /**
+     * Só para as outras simulações (reserva, devolução, manutenção) mudarem o status
+     * e o estado do item, como as regras do Main fazem. Não existe no window.api real.
+     */
+    _definirStatus: ({
+      id,
+      status,
+      estadoConservacao
+    }: Pick<Base, 'id' | 'status'> & Partial<Pick<Base, 'estadoConservacao'>>) => {
+      const atual = obter(id);
+      atual.status = status;
+      if (estadoConservacao) atual.estadoConservacao = estadoConservacao;
+    },
     alterarStatus: ({ id, status }: AlterarStatusEquipamentoDTO) => {
       const atual = obter(id);
       if (atual.status === 'RESERVADO' || atual.status === 'EM_MANUTENCAO') {
