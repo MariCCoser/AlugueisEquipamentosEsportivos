@@ -410,3 +410,65 @@ th[aria-sort='descending'] .tabela__ordenar::after {
   padding: var(--espaco-4);
   margin-bottom: var(--espaco-4);
 }
+
+/* ---------- Cartões de números (painel) ---------- */
+.cartoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--espaco-3);
+  margin-bottom: var(--espaco-5);
+}
+
+.cartao-numero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-1);
+  padding: var(--espaco-3) var(--espaco-4);
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-top: 4px solid var(--cor-primaria);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+
+a.cartao-numero:hover {
+  border-color: var(--cor-primaria);
+}
+
+.cartao-numero--alerta {
+  border-top-color: var(--cor-erro);
+}
+
+.cartao-numero__titulo {
+  color: var(--cor-texto-suave);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.cartao-numero__valor {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap; /* "R$ 1.250,00" não quebra no meio */
+}
+
+.cartao-numero--alerta .cartao-numero__valor {
+  color: var(--cor-erro);
+}
+
+.cartao-numero__detalhe {
+  color: var(--cor-texto-suave);
+  font-size: 0.85rem;
+}
+
+.rodape-tela {
+  margin-top: var(--espaco-5);
+  font-size: 0.85rem;
+}
+
+.rodape-tela a {
+  color: var(--cor-texto-suave);
+}

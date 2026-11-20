@@ -2,10 +2,11 @@ import { Layout, type ItemMenu } from './components/Layout';
 import { NOME_APP, Roteador } from './nucleo/Roteador';
 import type { DefinicaoRota } from './util/rotas';
 import type { Tela } from './nucleo/Tela';
+import { DashboardTela } from './pages/DashboardTela';
 import { CategoriasTela } from './pages/categorias/CategoriasTela';
 import { EmConstrucaoTela } from './pages/EmConstrucaoTela';
 import { FornecedoresTela } from './pages/fornecedores/FornecedoresTela';
-import { InicioTela } from './pages/InicioTela';
+import { StatusSistemaTela } from './pages/StatusSistemaTela';
 
 /** Itens do menu lateral, na ordem em que aparecem. */
 const MENU: readonly ItemMenu[] = [
@@ -29,7 +30,8 @@ const emConstrucao = (caminho: string): DefinicaoRota<Tela> => {
 
 /** Telas já construídas. */
 const TELAS: readonly DefinicaoRota<Tela>[] = [
-  { caminho: '/', criar: () => new InicioTela() },
+  { caminho: '/', criar: () => new DashboardTela() },
+  { caminho: '/sistema', criar: () => new StatusSistemaTela() },
   { caminho: '/categorias', criar: () => new CategoriasTela() },
   { caminho: '/fornecedores', criar: (_p, consulta) => new FornecedoresTela(consulta) }
 ];

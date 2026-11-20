@@ -7,12 +7,12 @@ import { el } from '../nucleo/dom';
 import type { Tela } from '../nucleo/Tela';
 
 /**
- * Painel provisório: mostra a versão do sistema e o estado do banco
- * (o que a tela inicial da Pessoa 1 já mostrava), agora dentro do layout novo.
- * Será substituído pelo Dashboard (canal dashboard:resumo).
+ * Status do sistema (#/sistema): versão do app e estado do banco, com a contagem
+ * de registros por tabela (o que a tela inicial da Pessoa 1 mostrava).
+ * Útil para conferir a instalação; o link fica no rodapé do Painel.
  */
-export class InicioTela implements Tela {
-  readonly titulo = 'Painel';
+export class StatusSistemaTela implements Tela {
+  readonly titulo = 'Status do sistema';
 
   montar(alvo: HTMLElement): void {
     const versao = el('p', { classe: 'cabecalho-tela__detalhe', texto: 'Consultando versão...' });
