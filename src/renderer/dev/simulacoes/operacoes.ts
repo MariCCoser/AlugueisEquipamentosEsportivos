@@ -120,7 +120,7 @@ export function simularOperacoes(equipamentosSim: Simulacao, clientesSim: Simula
     nova(2, 2, 'ATIVA', -2, 1, [4]),
     nova(3, 4, 'ATIVA', -1, 0, [7]),
     nova(4, 3, 'PENDENTE', 2, 4, [5], 50),
-    { ...nova(5, 1, 'DEVOLVIDA', -60, -58, [2, 8]), dataDevolucaoReal: somarDias(hoje, -56) }
+    { ...nova(5, 1, 'DEVOLVIDA', -60, -58, [2, 8], 80), dataDevolucaoReal: somarDias(hoje, -56) }
   ];
   let proximaReserva = 6;
 
