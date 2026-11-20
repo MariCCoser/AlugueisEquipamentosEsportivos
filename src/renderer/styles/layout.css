@@ -48,6 +48,8 @@
 
 .menu-lateral__link:focus-visible {
   outline-offset: -3px;
+  /* O laranja do foco fica com 2,8:1 no azul do menu; o branco tem 9,5:1. */
+  outline-color: var(--cor-primaria-texto);
 }
 
 .menu-lateral__rodape {
@@ -90,4 +92,42 @@
 .cabecalho-tela__detalhe {
   margin: 0;
   color: var(--cor-texto-suave);
+}
+
+/*
+ * Janela estreita ou zoom alto (ex.: 200% no Windows): o menu vai para o topo e o
+ * conteúdo usa a largura toda, sem rolagem horizontal da página (WCAG 1.4.10).
+ */
+@media (max-width: 760px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .menu-lateral__lista {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0 var(--espaco-2) var(--espaco-2);
+  }
+
+  .menu-lateral__link {
+    border-left: none;
+    border-bottom: 3px solid transparent;
+  }
+
+  .menu-lateral__link[aria-current='page'] {
+    border-bottom-color: var(--cor-destaque);
+  }
+
+  .menu-lateral__rodape {
+    display: none;
+  }
+
+  .conteudo {
+    padding: var(--espaco-3);
+  }
+
+  .cabecalho-tela {
+    flex-wrap: wrap;
+  }
 }

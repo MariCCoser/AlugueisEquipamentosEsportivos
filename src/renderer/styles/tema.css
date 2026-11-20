@@ -1,7 +1,8 @@
 /*
  * Tema da aplicação: todas as cores, espaçamentos e fontes ficam em variáveis.
  * Mudando aqui, o visual inteiro muda junto e o contraste continua consistente.
- * Contraste: todas as combinações texto/fundo abaixo têm pelo menos 4,5:1 (WCAG AA).
+ * Contraste (WCAG 2.1 AA), medido com a fórmula da WCAG — ver docs/ACESSIBILIDADE.md:
+ *   texto/fundo ≥ 4,5:1; contorno de campos e foco ≥ 3:1.
  */
 :root {
   --cor-primaria: #0f4c5c;
@@ -14,9 +15,12 @@
   --cor-superficie-suave: #eef2f5;
   --cor-texto: #1f2430;
   --cor-texto-suave: #5b6372;
+  /* Linhas decorativas (tabela, cartões). Não serve para contorno de campo: só 1,35:1. */
   --cor-borda: #d9dee5;
+  /* Contorno de campos e botões: 4,0:1 no branco (mínimo 3:1 para controles). */
+  --cor-borda-campo: #767f90;
 
-  --cor-sucesso: #1b7f3b;
+  --cor-sucesso: #17703a; /* 5,5:1 no fundo verde-claro (o anterior ficava em 4,50:1) */
   --cor-sucesso-fundo: #e7f5ec;
   --cor-erro: #b42318;
   --cor-erro-fundo: #fdecea;
@@ -77,6 +81,24 @@ h2 {
 :focus-visible {
   outline: 3px solid var(--cor-destaque);
   outline-offset: 2px;
+}
+
+/* Atalho "Pular para o conteúdo": invisível até receber o foco pelo Tab. */
+.pular-para-conteudo {
+  position: absolute;
+  left: var(--espaco-3);
+  top: -100px;
+  z-index: 2000;
+  padding: var(--espaco-2) var(--espaco-3);
+  background: var(--cor-superficie);
+  color: var(--cor-primaria);
+  font-weight: 700;
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-elevada);
+}
+
+.pular-para-conteudo:focus {
+  top: var(--espaco-3);
 }
 
 /* Texto lido só por leitores de tela. */
