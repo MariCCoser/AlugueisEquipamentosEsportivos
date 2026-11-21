@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { Configuracao, ConfiguracaoError } from '../../../src/main/config/Configuracao';
+import {
+  Configuracao,
+  ConfiguracaoError,
+  ENDERECO_LOJA_PADRAO
+} from '../../../src/main/config/Configuracao';
 
 const envValido = {
   DB_HOST: '127.0.0.1',
@@ -55,5 +59,21 @@ describe('Configuracao', () => {
     expect(() =>
       new Configuracao({ NOTIFICACOES_URL: 'ftp://x', NOTIFICACOES_CHAVE: 'abc' }).notificacoes()
     ).toThrow(/http/);
+  });
+
+  it('integrações: valores padrão sem .env e leitura do endereço da loja', () => {
+    expect(new Configuracao({}).integracoes()).toEqual({
+      tempoLimiteMs: 8000,
+      enderecoLoja: ENDERECO_LOJA_PADRAO
+    });
+    expect(
+      new Configuracao({
+        INTEGRACOES_TEMPO_LIMITE_MS: '3000',
+        LOJA_ENDERECO: ' Rua XV de Novembro, 78, Curitiba - PR '
+      }).integracoes()
+    ).toEqual({ tempoLimiteMs: 3000, enderecoLoja: 'Rua XV de Novembro, 78, Curitiba - PR' });
+    expect(() => new Configuracao({ INTEGRACOES_TEMPO_LIMITE_MS: '-1' }).integracoes()).toThrow(
+      ConfiguracaoError
+    );
   });
 });

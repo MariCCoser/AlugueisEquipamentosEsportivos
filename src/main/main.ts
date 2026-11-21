@@ -3,13 +3,19 @@ import { app, BrowserWindow } from 'electron';
 import { Configuracao } from './config/Configuracao';
 import { LocalArquivoEnv } from './config/LocalArquivoEnv';
 import { Database } from './database/Database';
+import type { Repositorios } from './repositories';
+import { ClienteHttp } from './integrations/ClienteHttp';
+import { ClimaClient } from './integrations/ClimaClient';
 import { NotificacaoClient } from './integrations/NotificacaoClient';
+import { RotasClient, USER_AGENT } from './integrations/RotasClient';
+import { ViaCepClient } from './integrations/ViaCepClient';
 import { registrarAppIpc, type DependenciasApp } from './ipc/app.ipc';
 import { registrarCategoriasIpc } from './ipc/categorias.ipc';
 import { registrarClientesIpc } from './ipc/clientes.ipc';
 import { registrarEquipamentosIpc } from './ipc/equipamentos.ipc';
 import { registrarFinanceiroIpc } from './ipc/financeiro.ipc';
 import { registrarFornecedoresIpc } from './ipc/fornecedores.ipc';
+import { registrarIntegracoesIpc } from './ipc/integracoes.ipc';
 import { registrarManutencoesIpc } from './ipc/manutencoes.ipc';
 import { registrarNotificacoesIpc } from './ipc/notificacoes.ipc';
 import { RegistroIpc } from './ipc/registrarHandlers';
@@ -24,6 +30,8 @@ import { MultaService } from './services/financeiro/MultaService';
 import { PagamentoService } from './services/financeiro/PagamentoService';
 import { FornecedorService } from './services/FornecedorService';
 import { HistoricoClienteService } from './services/HistoricoClienteService';
+import { PrevisaoClimaService } from './services/integracoes/PrevisaoClimaService';
+import { RotaService } from './services/integracoes/RotaService';
 import { ManutencaoService } from './services/ManutencaoService';
 import { FabricaEstrategiaMulta } from './services/multa/FabricaEstrategiaMulta';
 import { DevolucaoService } from './services/reserva/DevolucaoService';
@@ -136,6 +144,43 @@ class Aplicacao {
     );
     registrarFinanceiroIpc(registro, new MultaService(dados, multa), new PagamentoService(dados));
     registrarManutencoesIpc(registro, new ManutencaoService(dados, hoje));
+    this.registrarIntegracoes(registro, repos, hoje);
+  }
+
+  /** APIs externas 1, 2 e 3 (CEP, clima e rotas). Nenhuma precisa de chave. */
+  private registrarIntegracoes(
+    registro: RegistroIpc,
+    repos: Repositorios,
+    hoje: () => string
+  ): void {
+    try {
+      const { tempoLimiteMs, enderecoLoja } = new Configuracao().integracoes();
+      const http = (
+        nome: string,
+        extra: { dica?: string; cabecalhos?: Record<string, string> } = {}
+      ) => new ClienteHttp({ nome, tempoLimiteMs, ...extra });
+
+      registrarIntegracoesIpc(registro, {
+        cep: new ViaCepClient(http('o serviço de CEP', { dica: 'Preencha o endereço à mão.' })),
+        clima: new PrevisaoClimaService(
+          new ClimaClient(http('o serviço de previsão do tempo')),
+          repos.equipamentos,
+          repos.categorias,
+          hoje
+        ),
+        rotas: new RotaService(
+          new RotasClient(
+            http('o serviço de mapas', { cabecalhos: { 'User-Agent': USER_AGENT } }),
+            http('o serviço de rotas')
+          ),
+          repos.clientes,
+          enderecoLoja,
+          RotasClient.linkMapa
+        )
+      });
+    } catch (erro) {
+      console.error('[integracoes]', erro instanceof Error ? erro.message : erro);
+    }
   }
 
   /** Canais de notificação: precisam do banco (para achar o cliente) e da chave da API no .env. */
