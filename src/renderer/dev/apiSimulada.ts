@@ -1,7 +1,12 @@
 import type { ApiExposta } from '@shared/api';
 import type { ErroDTO, Resposta } from '@shared/dto/resposta';
 import { simularCategorias } from './simulacoes/categorias';
+import { simularClientes, simularIntegracoes } from './simulacoes/clientes';
+import { simularDashboard } from './simulacoes/dashboard';
+import { simularEquipamentos } from './simulacoes/equipamentos';
 import { simularFornecedores } from './simulacoes/fornecedores';
+import { simularOperacoes } from './simulacoes/operacoes';
+import { simularAuth, simularUsuarios } from './simulacoes/usuarios';
 
 /**
  * window.api FALSO, usado só em desenvolvimento quando a tela é aberta
@@ -21,6 +26,11 @@ export class ErroSimulado extends Error {
     super(erro.mensagem);
   }
 }
+
+// Reservas, devoluções e manutenções mexem no status dos equipamentos e leem os clientes.
+const equipamentos = simularEquipamentos();
+const clientes = simularClientes();
+const operacoes = simularOperacoes(equipamentos, clientes);
 
 const respostas: Partial<Record<string, Simulacao>> = {
   app: {
@@ -42,7 +52,18 @@ const respostas: Partial<Record<string, Simulacao>> = {
     })
   },
   categorias: simularCategorias(),
-  fornecedores: simularFornecedores()
+  fornecedores: simularFornecedores(),
+  dashboard: simularDashboard(),
+  equipamentos: { ...equipamentos, listarDisponiveis: operacoes.listarDisponiveis },
+  clientes,
+  integracoes: { ...simularIntegracoes(), ...operacoes.integracoes },
+  auth: simularAuth(),
+  usuarios: simularUsuarios(),
+  reservas: operacoes.reservas,
+  multas: operacoes.multas,
+  pagamentos: operacoes.pagamentos,
+  manutencoes: operacoes.manutencoes,
+  notificacoes: operacoes.notificacoes
 };
 
 function naoSimulado<T>(dominio: string, metodo: string): Resposta<T> {

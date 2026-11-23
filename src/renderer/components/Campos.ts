@@ -101,6 +101,37 @@ export class CampoTexto extends CampoBase<HTMLInputElement> {
   }
 }
 
+export interface OpcoesCampoAreaTexto {
+  nome: string;
+  rotulo: string;
+  valor?: string;
+  ajuda?: string;
+  maximo?: number;
+  linhas?: number;
+}
+
+/** Texto longo (observações, descrição do defeito). */
+export class CampoAreaTexto extends CampoBase<HTMLTextAreaElement> {
+  constructor(opcoes: OpcoesCampoAreaTexto) {
+    super(
+      el('textarea', {
+        atributos: { name: opcoes.nome, maxlength: opcoes.maximo, rows: opcoes.linhas ?? 3 }
+      }),
+      opcoes.rotulo,
+      opcoes.ajuda
+    );
+    this.controle.value = opcoes.valor ?? '';
+  }
+
+  get valor(): string {
+    return this.controle.value;
+  }
+
+  set valor(novo: string) {
+    this.controle.value = novo;
+  }
+}
+
 export interface OpcaoSelect {
   valor: string;
   rotulo: string;
