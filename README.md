@@ -70,11 +70,16 @@ Detalhes em [`src/main/database/`](src/main/database/).
    - `DB_ADMIN_USER` / `DB_ADMIN_PASSWORD`: o root do MySQL (no XAMPP, por padrão, sem senha).
    - `DB_USER` / `DB_PASSWORD`: o usuário que o app vai usar. Escolha uma senha; o setup cria esse usuário.
 3. `npm run db:setup` — no final aparece a tabela com a quantidade de registros.
-4. `npm run dev` — a tela inicial mostra **✔ Banco conectado** e as contagens.
+4. `npm run dev` — abre a tela de login. Depois de entrar, o Painel mostra os números do banco.
 
 Para ver os dados com interface gráfica: phpMyAdmin do XAMPP (`http://localhost/phpmyadmin`) ou MySQL Workbench.
 
-Login de exemplo (para quando a tela de login existir): `admin@aluguel.local` / `Admin@2026`.
+Logins de exemplo (criados pelo seed):
+
+| Perfil      | E-mail                      | Senha        |
+| ----------- | --------------------------- | ------------ |
+| ADMIN       | `admin@aluguel.local`       | `Admin@2026` |
+| FUNCIONARIO | `funcionario@aluguel.local` | `Func@2026`  |
 
 ### Testes de integração
 
