@@ -24,6 +24,17 @@ export interface ConfigNotificacoes {
   tempoLimiteMs: number;
 }
 
+/** APIs externas de CEP, clima e rotas (nenhuma precisa de chave). */
+export interface ConfigIntegracoes {
+  /** Quanto tempo esperar cada API antes de desistir. */
+  tempoLimiteMs: number;
+  /** Endereço da loja: ponto de partida da rota até o cliente atrasado. */
+  enderecoLoja: string;
+}
+
+/** Usado se o .env não tiver LOJA_ENDERECO (troque pelo endereço real da loja). */
+export const ENDERECO_LOJA_PADRAO = 'Avenida Paulista, 1000, Bela Vista, São Paulo - SP';
+
 export class ConfiguracaoError extends Error {
   constructor(mensagem: string) {
     super(mensagem);
@@ -67,6 +78,13 @@ export class Configuracao {
       url: url.replace(/\/+$/, ''), // sem barra no final
       chave: this.obrigatoria('NOTIFICACOES_CHAVE'),
       tempoLimiteMs: this.inteiro('NOTIFICACOES_TEMPO_LIMITE_MS', 5000)
+    };
+  }
+
+  integracoes(): ConfigIntegracoes {
+    return {
+      tempoLimiteMs: this.inteiro('INTEGRACOES_TEMPO_LIMITE_MS', 8000),
+      enderecoLoja: this.texto('LOJA_ENDERECO', ENDERECO_LOJA_PADRAO)
     };
   }
 
