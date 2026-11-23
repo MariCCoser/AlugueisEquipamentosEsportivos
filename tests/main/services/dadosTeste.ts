@@ -1,4 +1,10 @@
-import type { Categoria, Cliente, Equipamento, Fornecedor } from '@shared/models/entidades';
+import type {
+  Categoria,
+  Cliente,
+  Equipamento,
+  Fornecedor,
+  Usuario
+} from '@shared/models/entidades';
 
 /** Registros de exemplo (parecidos com o seed) para montar cenários nos testes. */
 const datas = { createdAt: '2026-11-01 10:00:00', updatedAt: '2026-11-01 10:00:00' };
@@ -60,6 +66,21 @@ export function umFornecedor(extra: Partial<Fornecedor> = {}): Fornecedor {
     contato: null,
     telefone: null,
     email: null,
+    ...datas,
+    ...extra
+  };
+}
+
+/** Usuário de exemplo. O `senhaHash` padrão é de 'senha-que-ninguem-usa'. */
+export function umUsuario(extra: Partial<Usuario> = {}): Usuario {
+  return {
+    id: 1,
+    nome: 'Administrador',
+    email: 'admin@aluguel.local',
+    senhaHash: '$2b$04$wFs2yTaAmTFxHVYpYKsa9OtHMJB1dVSh8hKnRrDVpLt1YdCUiy5rC',
+    perfil: 'ADMIN',
+    ativo: true,
+    ultimoLogin: null,
     ...datas,
     ...extra
   };
