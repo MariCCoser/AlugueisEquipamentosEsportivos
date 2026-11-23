@@ -75,7 +75,9 @@ Exemplo: o funcionário clica em **"Lembrar devolução"** na reserva 3.
 
 A interface. Roda isolada (`contextIsolation`, `sandbox`, sem `nodeIntegration`) e com uma CSP
 restritiva. Só enxerga o que o preload expõe em `window.api`.
-Hoje tem a tela inicial com o status do banco; as demais telas são da Pessoa 4.
+Telas em TypeScript puro com classes (Pessoa 4): login, Painel, nova reserva (com o clima),
+devoluções, inventário, clientes (com o histórico), categorias, fornecedores, manutenções,
+pagamentos, usuários e status do sistema. Detalhes em [`src/renderer/README.md`](../src/renderer/README.md).
 
 ### 3.2 Preload — `src/preload/preload.ts`
 
@@ -102,10 +104,18 @@ Tipos usados pelos dois lados, para a tela e o Main nunca "discordarem":
 | `RegistroIpc`            | Liga os 80 canais; confere origem e permissão; converte erros          |
 | `permissoes.ts`          | Quem pode usar cada canal: 4 `PUBLICO` (2 deles do app), 52 `LOGADO`, 24 `ADMIN` |
 | `app.ipc.ts`             | Canais `app:info` e `app:statusBanco`                                  |
+| `auth.ipc.ts`, `usuarios.ipc.ts` | Login, sessão e cadastro de usuários (Pessoa 3)                |
+| `clientes.ipc.ts`, `equipamentos.ipc.ts` | Cadastros e disponibilidade (Pessoa 2)                 |
+| `reservas.ipc.ts`        | Reservas, itens da reserva e devolução (Pessoa 2)                      |
+| `financeiro.ipc.ts`      | Multas e pagamentos (Pessoa 2)                                         |
+| `manutencoes.ipc.ts`     | Envio e retorno de manutenção (Pessoa 2)                               |
+| `categorias.ipc.ts`, `fornecedores.ipc.ts`, `dashboard.ipc.ts` | Cadastros de apoio e painel (Pessoa 4) |
+| `integracoes.ipc.ts`     | APIs externas: CEP, clima e rotas (Pessoa 3)                           |
 | `notificacoes.ipc.ts`    | Canais `notificacoes:enviarLembrete` e `notificacoes:enviarAvisoMulta` |
 
-Canal ainda sem service responde _"Esta função ainda não foi implementada."_ — o app não quebra
-enquanto o grupo implementa os domínios.
+Todos os 80 canais têm handler. Cada handler faz só três coisas: valida a entrada (zod) → chama
+o service → devolve `sucesso(...)`. Se um canal novo for criado sem handler, ele responde
+_"Esta função ainda não foi implementada."_ em vez de quebrar o app.
 
 **Os 78 canais da proposta por domínio:** auth 4 · usuarios 5 · clientes 6 · categorias 5 ·
 fornecedores 6 · equipamentos 8 · reservas e itens 14 · devoluções e multas 9 · manutencoes 8 ·
@@ -115,15 +125,41 @@ pagamentos 7 · integracoes 3 · notificacoes 2 · dashboard 1. (Lista completa:
 
 Regras de negócio. Recebem repositórios e clientes de API pelo construtor.
 
-| Service                 | Situação                    | Responsável |
-| ----------------------- | --------------------------- | ----------- |
-| `NotificacaoService`    | Pronto                      | Pessoa 1    |
-| Cliente, Equipamento, Disponibilidade, Reserva, Devolucao, Multa, Pagamento, Manutencao | A fazer | Pessoa 2 |
-| Auth, Usuario           | A fazer                     | Pessoa 3    |
-| Categoria, Fornecedor, Dashboard | A fazer            | Pessoa 4    |
+| Service | Situação | Responsável |
+| ------- | -------- | ----------- |
+| `NotificacaoService` | Pronto | Pessoa 1 |
+| `ClienteService`, `HistoricoClienteService`, `EquipamentoService`, `DisponibilidadeService` | Pronto | Pessoa 2 |
+| `reserva/`: `ReservaService`, `ItemReservaService`, `DevolucaoService` (+ `OperacoesReserva`) | Pronto | Pessoa 2 |
+| `financeiro/`: `MultaService`, `PagamentoService`, `SituacaoMulta`; `multa/` (Strategy) | Pronto | Pessoa 2 |
+| `ManutencaoService` | Pronto | Pessoa 2 |
+| `AuthService`, `UsuarioService` | Pronto | Pessoa 3 |
+| `integracoes/`: `PrevisaoClimaService`, `RotaService` | Pronto | Pessoa 3 |
+| `CategoriaService`, `FornecedorService`, `DashboardService` | Pronto | Pessoa 4 |
+
+Apoio: `UnidadeDeTrabalho` (transações: tudo dentro de `transacao(fn)` usa a mesma conexão e
+volta atrás se der erro), `Paginador` e `mapeadores/` (entidade → DTO).
 
 Erros esperados usam as classes de `src/main/errors/ErroApp.ts` (`ValidacaoError`,
-`NaoEncontradoError`, `RegraNegocioError`, `IntegracaoError`); a mensagem delas vai direto para a tela.
+`NaoEncontradoError`, `RegraNegocioError`, `NaoAutorizadoError`, `IntegracaoError`); a mensagem
+delas vai direto para a tela. `TradutorErroBanco` transforma erros conhecidos do MySQL (duplicado,
+registro em uso) nessas classes, para o texto do banco nunca chegar à tela.
+
+#### Domínio — `src/main/domain/` (Pessoa 2)
+
+Regras que **não dependem do banco**: os services carregam os dados, o domínio aplica a regra.
+Por isso dá para testar sem MySQL.
+
+| Classe | Regra |
+| ------ | ----- |
+| `Dinheiro` | Valores em centavos inteiros (sem erro de ponto flutuante); imutável |
+| `CalendarioISO` | Datas `AAAA-MM-DD` em UTC e em dias inteiros; recusa datas que não existem |
+| `Periodo` | Diárias (devolução − retirada, mínimo 1), sobreposição com bordas inclusivas, dias de atraso |
+| `CicloReserva` | PENDENTE → ATIVA → DEVOLVIDA; PENDENTE/ATIVA → CANCELADA; o resto é bloqueado |
+| `EquipamentoDominio` | Preço obrigatório conforme a modalidade; o que impede um item de ser reservado |
+| `ReservaDominio` | Valor total, caução sugerida (30%), mudanças de status sempre pelo `CicloReserva` |
+
+Multa por atraso: padrão **Strategy** em `services/multa/` (`MultaPercentual` — padrão 10% da
+soma das diárias por dia — e `MultaDiariaFixa`), escolhida pela `FabricaEstrategiaMulta`.
 
 ### 3.6 Repositories — `src/main/repositories/`
 
@@ -157,10 +193,15 @@ do seu domínio (ex.: `ReservaRepository.equipamentoReservadoNoPeriodo`, `listar
 
 | Situação de uso de API (Requisito 3)        | Classe              | Situação  | Responsável |
 | ------------------------------------------- | ------------------- | --------- | ----------- |
-| 1. Preencher endereço pelo CEP (ViaCEP)     | `ViaCepClient`      | A fazer   | Pessoa 3    |
-| 2. Alerta de clima ao confirmar reserva     | `ClimaClient`       | A fazer   | Pessoa 3    |
-| 3. Rota até o cliente com devolução atrasada| `RotasClient`       | A fazer   | Pessoa 3    |
+| 1. Preencher endereço pelo CEP (ViaCEP)     | `ViaCepClient`      | Pronto    | Pessoa 3    |
+| 2. Alerta de clima ao confirmar reserva (Open-Meteo) | `ClimaClient` + `PrevisaoClimaService` | Pronto | Pessoa 3 |
+| 3. Rota até o cliente com devolução atrasada (Nominatim + OSRM) | `RotasClient` + `RotaService` | Pronto | Pessoa 3 |
 | 4. Lembrete de devolução e aviso de multa (API própria) | `NotificacaoClient` + `api-notificacoes/` | Pronto | Pessoa 1 |
+
+As APIs 1 a 3 não precisam de chave e passam pelo `ClienteHttp` (tempo limite com
+`AbortController` e mensagens amigáveis) e pelo `CacheMemoria`. Se falharem, o trabalho continua
+(endereço digitado à mão, "Previsão indisponível", devolução sem rota). Decisões em
+[`SEGURANCA.md`](SEGURANCA.md), seção 8.
 
 A **API própria** é um servidor Express em TypeScript (`npm run api:notificacoes`), só em
 `127.0.0.1`, protegido por chave. Detalhes em [`api-notificacoes/README.md`](../api-notificacoes/README.md).
@@ -172,7 +213,11 @@ A **API própria** é um servidor Express em TypeScript (`npm run api:notificaco
 | `EndurecimentoElectron` | Janela isolada, permissões negadas, bloqueio de navegação e downloads     |
 | `PoliticaOrigem`        | Diz se uma URL é a nossa tela e quais sites externos podem abrir         |
 | `Sessao`                | Guarda quem está logado (no Main, nunca na tela)                         |
-| `Configuracao`          | Lê e valida o `.env` (banco e API de notificações)                       |
+| `HashSenha`             | Hash e conferência de senha com bcrypt (custo 10)                        |
+| `LimiteTentativas`      | 5 senhas erradas seguidas bloqueiam o e-mail por 5 minutos               |
+| `LogSeguro`             | Mascara CPF, telefone e e-mail antes de escrever no log (LGPD)           |
+| `validators/`           | `Validador` + um schema zod por domínio para tudo que chega pelo IPC     |
+| `Configuracao`          | Lê e valida o `.env` (banco, API de notificações e APIs externas)        |
 
 ### 3.10 Composição — `src/main/main.ts`
 
